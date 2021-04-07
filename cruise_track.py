@@ -149,9 +149,7 @@ class CruiseTrackExport:
             self.iface.addToolBarIcon(action)
 
         if add_to_menu:
-            self.iface.addPluginToMenu(
-                self.menu,
-                action)
+            self.iface.addPluginToMenu(self.menu,action)
 
         self.actions.append(action)
 
@@ -173,14 +171,11 @@ class CruiseTrackExport:
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""
         for action in self.actions:
-            self.iface.removePluginMenu(
-                self.tr(u'&Cruise Track Export'),
-                action)
+            self.iface.removePluginMenu(self.tr(u'&Cruise Track Export'), action)
             self.iface.removeToolBarIcon(action)
 
     def select_output_file(self):  # added
-        filename, _filter = QFileDialog.getSaveFileName(
-            self.dlg, "Select   output file ", "", '*.csv')
+        filename, _filter = QFileDialog.getSaveFileName(self.dlg, "Select   output file ", "", '*.cvt')
         self.dlg.le_outTrack.setText(filename)
 
     def run(self):
@@ -193,8 +188,7 @@ class CruiseTrackExport:
 
         layers = QgsProject.instance().layerTreeRoot().children()  # Fetch the currently loaded layers
         self.dlg.cb_inVector.clear()  # Clear the contents of the comboBox from previous runs
-        self.dlg.cb_inVector.addItems(
-            [layer.name() for layer in layers])  # Populate the comboBox with names of all the loaded layers
+        self.dlg.cb_inVector.addItems([layer.name() for layer in layers])  # Populate the comboBox with names of all the loaded layers
 
         self.dlg.show()  # show the dialog
         result = self.dlg.exec_()  # Run the dialog event loop
@@ -216,7 +210,9 @@ class CruiseTrackExport:
             import math
 
             #### #### #### #### #### #### #### #### #### #### #### #### #### #### #### ####
-            laye_r = iface.activeLayer()  # Gives you the layer you have selected in the Layers Panel
+            selectedLayerIndex = self.dlg.cb_inVector.currentIndex()   # Identify selected layer by its index
+            ly_tree_nd = layers[selectedLayerIndex]
+            laye_r = ly_tree_nd.layer() # Gives you the layer you have selected in the Layers Panel
             feature_s = laye_r.getFeatures()
             laye_r.dataProvider().deleteAttributes(list(range(0, len(laye_r.fields().names()))))  # safer and easier to just delete attribute table (change maybe later)
             laye_r.updateFields()
@@ -291,7 +287,7 @@ class CruiseTrackExport:
                     lon_sp_her = np.zeros(len(reihe_her))
                     lat_st_her = np.zeros(len(reihe_her))
                     lat_sp_her = np.zeros(len(reihe_her))
-                    for nn in range(0, len(reihe_hin)):  # track hin
+                    for nn in range(0, len(reihe_hin)):                 # there
                         if nn / 2 != np.round(nn / 2):
                             lon_st_hin[nn] = df.iloc[reihe_hin[nn], 0]
                             lon_sp_hin[nn] = df.iloc[reihe_hin[nn], 1]
@@ -302,8 +298,27 @@ class CruiseTrackExport:
                             lon_sp_hin[nn] = df.iloc[reihe_hin[nn], 0]
                             lat_st_hin[nn] = df.iloc[reihe_hin[nn], 3]
                             lat_sp_hin[nn] = df.iloc[reihe_hin[nn], 2]
-                    for nn in range(0, len(reihe_her)):  # track zurück
-                        if len(laye_r) / 2 == np.round(len(laye_r) / 2):  # gerade Anzahl von Profilen
+                    testvec = np.zeros(len(laye_r))                     # back
+                    dito = 0
+                    for nn in range(1, len(laye_r)):
+                        if nn / 2 == np.round(nn / 2):
+                            dito = dito + 3
+                        else:
+                            dito = dito + 1
+                        testvec[nn] = dito
+                    for nn in range(0, len(reihe_her)):
+                        if len(laye_r) - 1 in testvec:
+                            if nn / 2 != np.round(nn / 2):
+                                lon_st_her[nn] = df.iloc[reihe_her[nn], 1]
+                                lon_sp_her[nn] = df.iloc[reihe_her[nn], 0]
+                                lat_st_her[nn] = df.iloc[reihe_her[nn], 3]
+                                lat_sp_her[nn] = df.iloc[reihe_her[nn], 2]
+                            else:
+                                lon_st_her[nn] = df.iloc[reihe_her[nn], 0]
+                                lon_sp_her[nn] = df.iloc[reihe_her[nn], 1]
+                                lat_st_her[nn] = df.iloc[reihe_her[nn], 2]
+                                lat_sp_her[nn] = df.iloc[reihe_her[nn], 3]
+                        else:
                             if nn / 2 != np.round(nn / 2):
                                 lon_st_her[nn] = df.iloc[reihe_her[nn], 0]
                                 lon_sp_her[nn] = df.iloc[reihe_her[nn], 1]
@@ -314,19 +329,6 @@ class CruiseTrackExport:
                                 lon_sp_her[nn] = df.iloc[reihe_her[nn], 0]
                                 lat_st_her[nn] = df.iloc[reihe_her[nn], 3]
                                 lat_sp_her[nn] = df.iloc[reihe_her[nn], 2]
-
-                        else:  # ungerade Anzahl von Profilen
-                            if nn / 2 != np.round(nn / 2):
-                                lon_st_her[nn] = df.iloc[reihe_her[nn], 0]
-                                lon_sp_her[nn] = df.iloc[reihe_her[nn], 1]
-                                lat_st_her[nn] = df.iloc[reihe_her[nn], 2]
-                                lat_sp_her[nn] = df.iloc[reihe_her[nn], 3]
-                            else:
-                                lon_st_her[nn] = df.iloc[reihe_her[nn], 1]
-                                lon_sp_her[nn] = df.iloc[reihe_her[nn], 0]
-                                lat_st_her[nn] = df.iloc[reihe_her[nn], 3]
-                                lat_sp_her[nn] = df.iloc[reihe_her[nn], 2]
-
                     new_lat_st = np.concatenate((lat_st_hin, lat_st_her), axis=0)
                     new_lat_sp = np.concatenate((lat_sp_hin, lat_sp_her), axis=0)
                     new_lon_st = np.concatenate((lon_st_hin, lon_st_her), axis=0)
@@ -334,7 +336,7 @@ class CruiseTrackExport:
                     arrays = np.transpose([new_lon_st, new_lon_sp, new_lat_st, new_lat_sp])
                     df = pd.DataFrame(arrays)
 
-                #### Littorina Schlepp Profile (nur Drehen über Backbord)
+                #### just turn over one side (e.g. Littorina towing)
                 elif self.dlg.Littorina.isChecked():
                     lis_t = list(range(0, len(laye_r)));
                     odds_idx = lis_t[1::2];
@@ -410,9 +412,9 @@ class CruiseTrackExport:
                 sys.stdout = f_out  # Change the standard output to the file we created.
                 print("\n".join(str(fprintf_copy(sys.stdout,
                                                  ";\nWP %03.f NAME\nLAT  %.f°%.5f LON  %.f°%.5f\nRL (Rumb Line)\nXTE= 0.00nm\nTurnRadius= 0.00nm\n"
-                                                 , data_fram_e.iloc[0, waypoint], data_fram_e.iloc[1, waypoint]
-                                                 , data_fram_e.iloc[2, waypoint], data_fram_e.iloc[3, waypoint]
-                                                 , data_fram_e.iloc[4, waypoint])) for waypoint in
+                                                 , data_fram_e.iloc[0, waypoint], data_fram_e.iloc[3, waypoint]
+                                                 , data_fram_e.iloc[4, waypoint], data_fram_e.iloc[1, waypoint]
+                                                 , data_fram_e.iloc[2, waypoint])) for waypoint in
                                 list(range(0, len(df.index) * 2))))
                 sys.stdout = original_stdout  # Reset the standard output to its original value
 
