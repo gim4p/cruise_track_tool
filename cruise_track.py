@@ -249,7 +249,7 @@ class CruiseTrackExport:
 
             #### #### #### #### wenn CheckBox accessory aktiviert, dann: #### #### #### #### #### #### #### #### #### #### #### ####
             if self.dlg.accessory.isChecked():  # added
-                #### wenn chaotische linienreihenfolge -> organise by X_mean (nur, wenn Profile nicht sehr divers in Länge und Posiion)
+                #### wenn chaotische linienreihenfolge -> organise by X_mean/Y-mean (nur, wenn Profile nicht sehr divers in Länge und Posiion)
                 df = df.sort_values(by=[5])
                 #### alle Linien gleich ausrichten
                 new_lon_st = np.zeros(len(df))
@@ -270,11 +270,20 @@ class CruiseTrackExport:
                 arrays = np.transpose([new_lon_st, new_lon_sp, new_lat_st, new_lat_sp])
                 df = pd.DataFrame(arrays)
 
+                #### flip NS
+                if self.dlg.checkBox_flipNS.isChecked():
+                    df = df.iloc[::-1]  # NS
+
                 #### Reihe normale Profile
                 if self.dlg.normalProfiles.isChecked():
-                    idx_reihe = -1 + np.sort(np.matlib.repmat(np.arange(0, len(laye_r) * 2, 4).tolist(), 1, 4)) + np.matlib.repmat((1, 2, 4, 3), 1, len(np.arange(0, len(laye_r) * 2, 4).tolist()))
+                    #### flip WE
+                    if self.dlg.checkBox_flipWE.isChecked():
+                        idx_reihe = -1 + np.sort(np.matlib.repmat(np.arange(0, len(laye_r) * 2, 4).tolist(), 1, 4)) + np.matlib.repmat((2, 1, 3, 4), 1, len(np.arange(0, len(laye_r) * 2, 4).tolist()))
+                    else:
+                        idx_reihe = -1 + np.sort(np.matlib.repmat(np.arange(0, len(laye_r) * 2, 4).tolist(), 1, 4)) + np.matlib.repmat((1, 2, 4, 3), 1, len(np.arange(0, len(laye_r) * 2, 4).tolist()))
                     idx_reihe = idx_reihe[0][:]
                     idx_reihe = idx_reihe[0:len(df) * 2]
+
                 #### Reihe für jedes zweite Profil
                 elif self.dlg.every2nd.isChecked():
                     reihe_hin = np.arange(0, len(laye_r), 2).tolist()
@@ -333,6 +342,12 @@ class CruiseTrackExport:
                     new_lat_sp = np.concatenate((lat_sp_hin, lat_sp_her), axis=0)
                     new_lon_st = np.concatenate((lon_st_hin, lon_st_her), axis=0)
                     new_lon_sp = np.concatenate((lon_sp_hin, lon_sp_her), axis=0)
+                    #### flip WE
+                    if self.dlg.checkBox_flipWE.isChecked():
+                        new_lat_st = np.concatenate((lat_sp_hin, lat_sp_her), axis=0)
+                        new_lat_sp = np.concatenate((lat_st_hin, lat_st_her), axis=0)
+                        new_lon_st = np.concatenate((lon_sp_hin, lon_sp_her), axis=0)
+                        new_lon_sp = np.concatenate((lon_st_hin, lon_st_her), axis=0)
                     arrays = np.transpose([new_lon_st, new_lon_sp, new_lat_st, new_lat_sp])
                     df = pd.DataFrame(arrays)
 
@@ -360,6 +375,16 @@ class CruiseTrackExport:
                     new_lon_sp[evens_idx] = df.iloc[vec[evens_idx], 0]
                     new_lat_st[evens_idx] = df.iloc[vec[evens_idx], 3]
                     new_lat_sp[evens_idx] = df.iloc[vec[evens_idx], 2]
+                    #### flip WE cumbersome and double
+                    if self.dlg.checkBox_flipWE.isChecked():
+                        new_lat_st2 = new_lat_sp
+                        new_lat_sp2 = new_lat_st
+                        new_lon_st2 = new_lon_sp
+                        new_lon_sp2 = new_lon_st
+                        new_lat_st = new_lat_st2
+                        new_lat_sp = new_lat_sp2
+                        new_lon_st = new_lon_st2
+                        new_lon_sp = new_lon_sp2
                     arrays = np.transpose([new_lon_st, new_lon_sp, new_lat_st, new_lat_sp])
                     df = pd.DataFrame(arrays)
 
@@ -387,6 +412,19 @@ class CruiseTrackExport:
                 Lon = Lon_organised
                 Lat = Lat_organised
 
+            #### flip WE for in general no further track manupulation
+            if self.dlg.checkBox_flipWE.isChecked():
+                idx_reihe = -1 + np.sort(np.matlib.repmat(np.arange(0, len(laye_r) * 2, 4).tolist(), 1, 4)) + np.matlib.repmat((2, 1, 4, 3), 1, len(np.arange(0, len(laye_r) * 2, 4).tolist()))
+                idx_reihe = idx_reihe[0][:];  # len(idx_reihe) # idx_reihe.tolist()
+                idx_reihe = idx_reihe[0:len(df) * 2]
+                Lon_organised = np.zeros(len(df) * 2)
+                Lat_organised = np.zeros(len(df) * 2)
+                for mm in range(0, len(df) * 2):
+                    Lon_organised[mm] = Lon[int(idx_reihe[mm])]
+                    Lat_organised[mm] = Lat[int(idx_reihe[mm])]
+                Lon = Lon_organised
+                Lat = Lat_organised
+
             #### #### #### #### make DD MM.MMMMM #### #### #### #### #### #### #### #### #### #### #### ####
             DD_lon = np.floor(Lon)
             DD_lat = np.floor(Lat)
@@ -397,6 +435,9 @@ class CruiseTrackExport:
             data_fram_e = pd.DataFrame(data_arra_y)
 
             #### #### #### #### export file #### #### #### #### #### #### #### #### #### #### #### ####
+            # am not sure how diverse/ compatible those formats can be on different ships;
+            # following format at least worked for FK Littorina and FS Alkor in 2018;
+            # maybe it would be cool to add (and QT-gui connect) more format-file options (if possible)
             def fprintf_copy(stream, format_spec, *args):
                 stream.write(format_spec % args)
 
@@ -420,7 +461,9 @@ class CruiseTrackExport:
 
             #### #### #### #### plot the track to check the track #### #### #### #### #### #### #### #### #### #### #### ####
             plt.figure(1)
-            plt.plot(Lon, Lat)
+            plt.plot(Lon, Lat, label="track")
+            plt.plot(Lon[0], Lat[0], 'r*', label="start")
             plt.ylabel('Lat')
             plt.xlabel('Lon')
+            plt.legend(loc="upper left")
             plt.show()

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>592</width>
-    <height>523</height>
+    <width>604</width>
+    <height>533</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -16,8 +16,8 @@
   <widget class="QDialogButtonBox" name="button_box">
    <property name="geometry">
     <rect>
-     <x>370</x>
-     <y>469</y>
+     <x>400</x>
+     <y>480</y>
      <width>171</width>
      <height>32</height>
     </rect>
@@ -34,7 +34,7 @@
     <rect>
      <x>104</x>
      <y>50</y>
-     <width>431</width>
+     <width>471</width>
      <height>20</height>
     </rect>
    </property>
@@ -57,8 +57,8 @@
     <rect>
      <x>40</x>
      <y>109</y>
-     <width>501</width>
-     <height>301</height>
+     <width>531</width>
+     <height>311</height>
     </rect>
    </property>
    <property name="frameShape">
@@ -67,38 +67,12 @@
    <property name="frameShadow">
     <enum>QFrame::Raised</enum>
    </property>
-   <widget class="QRadioButton" name="every2nd">
-    <property name="geometry">
-     <rect>
-      <x>60</x>
-      <y>139</y>
-      <width>131</width>
-      <height>17</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>every 2nd line</string>
-    </property>
-   </widget>
-   <widget class="QRadioButton" name="Littorina">
-    <property name="geometry">
-     <rect>
-      <x>60</x>
-      <y>170</y>
-      <width>131</width>
-      <height>17</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Littorina SSS profiles</string>
-    </property>
-   </widget>
    <widget class="QRadioButton" name="normalProfiles">
     <property name="geometry">
      <rect>
-      <x>60</x>
-      <y>110</y>
-      <width>131</width>
+      <x>170</x>
+      <y>160</y>
+      <width>101</width>
       <height>17</height>
      </rect>
     </property>
@@ -109,10 +83,10 @@
    <widget class="Line" name="line">
     <property name="geometry">
      <rect>
-      <x>250</x>
+      <x>270</x>
       <y>40</y>
       <width>20</width>
-      <height>261</height>
+      <height>271</height>
      </rect>
     </property>
     <property name="orientation">
@@ -122,7 +96,7 @@
    <widget class="QLabel" name="label_3">
     <property name="geometry">
      <rect>
-      <x>281</x>
+      <x>300</x>
       <y>51</y>
       <width>198</width>
       <height>16</height>
@@ -135,7 +109,7 @@
    <widget class="QLabel" name="label_4">
     <property name="geometry">
      <rect>
-      <x>281</x>
+      <x>300</x>
       <y>70</y>
       <width>122</width>
       <height>16</height>
@@ -171,10 +145,10 @@
      <string>if it's not already done anyway</string>
     </property>
    </widget>
-   <widget class="QRadioButton" name="radioButton_4">
+   <widget class="QRadioButton" name="stations_in_row">
     <property name="geometry">
      <rect>
-      <x>310</x>
+      <x>330</x>
       <y>140</y>
       <width>131</width>
       <height>17</height>
@@ -188,7 +162,7 @@
     <property name="geometry">
      <rect>
       <x>40</x>
-      <y>210</y>
+      <y>220</y>
       <width>181</width>
       <height>71</height>
      </rect>
@@ -199,7 +173,7 @@
     <property name="frameShadow">
      <enum>QFrame::Raised</enum>
     </property>
-    <widget class="QCheckBox" name="checkBox">
+    <widget class="QCheckBox" name="checkBox_flipNS">
      <property name="geometry">
       <rect>
        <x>30</x>
@@ -212,7 +186,7 @@
       <string>flip profiles  NS</string>
      </property>
     </widget>
-    <widget class="QCheckBox" name="checkBox_2">
+    <widget class="QCheckBox" name="checkBox_flipWE">
      <property name="geometry">
       <rect>
        <x>30</x>
@@ -247,7 +221,7 @@
      <rect>
       <x>0</x>
       <y>30</y>
-      <width>501</width>
+      <width>531</width>
       <height>20</height>
      </rect>
     </property>
@@ -255,12 +229,64 @@
      <enum>Qt::Horizontal</enum>
     </property>
    </widget>
+   <widget class="QLabel" name="label_7">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>180</y>
+      <width>141</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>(e.g. towing SSS on Littorina)</string>
+    </property>
+   </widget>
+   <widget class="QRadioButton" name="radioButton_5">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>120</y>
+      <width>71</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>none</string>
+    </property>
+   </widget>
+   <widget class="QRadioButton" name="Littorina">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>160</y>
+      <width>101</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>single-sided turn</string>
+    </property>
+   </widget>
+   <widget class="QRadioButton" name="every2nd">
+    <property name="geometry">
+     <rect>
+      <x>170</x>
+      <y>120</y>
+      <width>91</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>every 2nd line</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QToolButton" name="tb_outTrack">
    <property name="geometry">
     <rect>
-     <x>500</x>
-     <y>430</y>
+     <x>530</x>
+     <y>440</y>
      <width>41</width>
      <height>19</height>
     </rect>
@@ -273,7 +299,7 @@
    <property name="geometry">
     <rect>
      <x>40</x>
-     <y>430</y>
+     <y>440</y>
      <width>76</width>
      <height>16</height>
     </rect>
@@ -286,10 +312,23 @@
    <property name="geometry">
     <rect>
      <x>123</x>
-     <y>430</y>
-     <width>371</width>
+     <y>440</y>
+     <width>391</width>
      <height>20</height>
     </rect>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_8">
+   <property name="geometry">
+    <rect>
+     <x>130</x>
+     <y>460</y>
+     <width>291</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>(at the moment still recommended to make new file always)</string>
    </property>
   </widget>
  </widget>
