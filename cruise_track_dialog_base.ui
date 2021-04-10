@@ -157,7 +157,7 @@
       </rect>
      </property>
      <property name="text">
-      <string>flip profiles  NS</string>
+      <string>flip profiles  across</string>
      </property>
     </widget>
     <widget class="QCheckBox" name="checkBox_flipWE">
@@ -170,7 +170,7 @@
       </rect>
      </property>
      <property name="text">
-      <string>flip profiles  WE</string>
+      <string>flip profiles  along</string>
      </property>
     </widget>
    </widget>
@@ -216,7 +216,7 @@
      <string>(e.g. towing SSS on Littorina)</string>
     </property>
    </widget>
-   <widget class="QRadioButton" name="radioButton_5">
+   <widget class="QRadioButton" name="noneBt">
     <property name="geometry">
      <rect>
       <x>20</x>

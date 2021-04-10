@@ -255,33 +255,41 @@ class CruiseTrackExport:
                         laye_r.updateFeature(fea_t)
                 laye_r.commitChanges()
                 df = pd.DataFrame(fea_t.attributes() for fea_t in laye_r.getFeatures(QgsFeatureRequest()))
-
+                
+                if self.dlg.accessory.isChecked():
+                    uncheckedaccessory=0
+                else:
+                    uncheckedaccessory=1
+                    
+                if self.dlg.noneBt.isChecked():
+                    noneBt=1 
+                else:
+                    noneBt=0
+                        
                 #### #### #### #### if CheckBox 'accessory' active  #### #### #### #### #### #### #### #### #### #### #### ####
                 if self.dlg.accessory.isChecked():
-                    #### wenn chaotische linienreihenfolge -> organise by X_mean/Y-mean (nur, wenn Profile nicht sehr divers in Länge und Posiion)
-                    df = df.sort_values(by=[5])
-                    #### alle Linien gleich ausrichten
-                    new_lon_st = np.zeros(len(df))
-                    new_lon_sp = np.zeros(len(df))
-                    new_lat_st = np.zeros(len(df))
-                    new_lat_sp = np.zeros(len(df))
-                    for nn in list(range(0, len(df))):
-                        if df.iloc[nn, 0] < df.iloc[nn, 1]:
-                            new_lon_st[nn] = df.iloc[nn, 0]
-                            new_lon_sp[nn] = df.iloc[nn, 1]
-                            new_lat_st[nn] = df.iloc[nn, 2]
-                            new_lat_sp[nn] = df.iloc[nn, 3]
-                        else:
-                            new_lon_st[nn] = df.iloc[nn, 1]
-                            new_lon_sp[nn] = df.iloc[nn, 0]
-                            new_lat_st[nn] = df.iloc[nn, 3]
-                            new_lat_sp[nn] = df.iloc[nn, 2]
-                    arrays = np.transpose([new_lon_st, new_lon_sp, new_lat_st, new_lat_sp])
-                    df = pd.DataFrame(arrays)
-
-                    #### flip NS
-                    if self.dlg.checkBox_flipNS.isChecked():
-                        df = df.iloc[::-1]  # NS
+                    
+                    if noneBt!=1:
+                        #### wenn chaotische linienreihenfolge -> organise by X_mean/Y-mean (nur, wenn Profile nicht sehr divers in Länge und Posiion)
+                        df = df.sort_values(by=[5])
+                        #### alle Linien gleich ausrichten
+                        new_lon_st = np.zeros(len(df))
+                        new_lon_sp = np.zeros(len(df))
+                        new_lat_st = np.zeros(len(df))
+                        new_lat_sp = np.zeros(len(df))
+                        for nn in list(range(0, len(df))):
+                            if df.iloc[nn, 0] < df.iloc[nn, 1]:
+                                new_lon_st[nn] = df.iloc[nn, 0]
+                                new_lon_sp[nn] = df.iloc[nn, 1]
+                                new_lat_st[nn] = df.iloc[nn, 2]
+                                new_lat_sp[nn] = df.iloc[nn, 3]
+                            else:
+                                new_lon_st[nn] = df.iloc[nn, 1]
+                                new_lon_sp[nn] = df.iloc[nn, 0]
+                                new_lat_st[nn] = df.iloc[nn, 3]
+                                new_lat_sp[nn] = df.iloc[nn, 2]
+                        arrays = np.transpose([new_lon_st, new_lon_sp, new_lat_st, new_lat_sp])
+                        df = pd.DataFrame(arrays)
 
                     #### series for normal profile
                     if self.dlg.normalProfiles.isChecked():
@@ -347,10 +355,6 @@ class CruiseTrackExport:
                                     lon_sp_her[nn] = df.iloc[reihe_her[nn], 0]
                                     lat_st_her[nn] = df.iloc[reihe_her[nn], 3]
                                     lat_sp_her[nn] = df.iloc[reihe_her[nn], 2]
-                        new_lat_st = np.concatenate((lat_st_hin, lat_st_her), axis=0)
-                        new_lat_sp = np.concatenate((lat_sp_hin, lat_sp_her), axis=0)
-                        new_lon_st = np.concatenate((lon_st_hin, lon_st_her), axis=0)
-                        new_lon_sp = np.concatenate((lon_sp_hin, lon_sp_her), axis=0)
                         
                         #### flip WE
                         if self.dlg.checkBox_flipWE.isChecked():
@@ -358,6 +362,12 @@ class CruiseTrackExport:
                             new_lat_sp = np.concatenate((lat_st_hin, lat_st_her), axis=0)
                             new_lon_st = np.concatenate((lon_sp_hin, lon_sp_her), axis=0)
                             new_lon_sp = np.concatenate((lon_st_hin, lon_st_her), axis=0)
+                        else:
+                            new_lat_st = np.concatenate((lat_st_hin, lat_st_her), axis=0)
+                            new_lat_sp = np.concatenate((lat_sp_hin, lat_sp_her), axis=0)
+                            new_lon_st = np.concatenate((lon_st_hin, lon_st_her), axis=0)
+                            new_lon_sp = np.concatenate((lon_sp_hin, lon_sp_her), axis=0)
+                            
                         arrays = np.transpose([new_lon_st, new_lon_sp, new_lat_st, new_lat_sp])
                         df = pd.DataFrame(arrays)
 
@@ -396,12 +406,19 @@ class CruiseTrackExport:
                             new_lat_sp = new_lat_sp2
                             new_lon_st = new_lon_st2
                             new_lon_sp = new_lon_sp2
+                        
                         arrays = np.transpose([new_lon_st, new_lon_sp, new_lat_st, new_lat_sp])
                         df = pd.DataFrame(arrays)
 
                 else:
                     print("track not manipulated")
-
+                
+                #### flip NS
+                
+                if self.dlg.checkBox_flipNS.isChecked():
+                    df = df.iloc[::-1]     
+                    
+                        
                 #### #### #### #### make just two culumns Lon and Lat #### #### #### #### #### #### #### #### #### #### #### ####
                 lis_t2 = list(range(0, len(df.index) * 2))
                 odds_idx2 = lis_t2[1::2]
@@ -412,7 +429,7 @@ class CruiseTrackExport:
                 Lat = np.zeros(len(df.index) * 2)
                 Lat[odds_idx2] = df[2]
                 Lat[evens_idx2] = df[3]
-
+                
                 if self.dlg.normalProfiles.isChecked():
                     Lon_organised = np.zeros(len(df) * 2)
                     Lat_organised = np.zeros(len(df) * 2)
@@ -422,18 +439,21 @@ class CruiseTrackExport:
                     Lon = Lon_organised
                     Lat = Lat_organised
 
+                if uncheckedaccessory==1 or noneBt==1:
                 #### flip WE for in general no further track manupulation
-                if self.dlg.checkBox_flipWE.isChecked():
-                    idx_reihe = -1 + np.sort(np.matlib.repmat(np.arange(0, len(laye_r) * 2, 4).tolist(), 1, 4)) + np.matlib.repmat((2, 1, 4, 3), 1, len(np.arange(0, len(laye_r) * 2, 4).tolist()))
-                    idx_reihe = idx_reihe[0][:];  # len(idx_reihe) # idx_reihe.tolist()
-                    idx_reihe = idx_reihe[0:len(df) * 2]
-                    Lon_organised = np.zeros(len(df) * 2)
-                    Lat_organised = np.zeros(len(df) * 2)
-                    for mm in range(0, len(df) * 2):
-                        Lon_organised[mm] = Lon[int(idx_reihe[mm])]
-                        Lat_organised[mm] = Lat[int(idx_reihe[mm])]
-                    Lon = Lon_organised
-                    Lat = Lat_organised
+                    if self.dlg.checkBox_flipWE.isChecked():
+                        idx_reihe = -1 + np.sort(np.matlib.repmat(np.arange(0, len(laye_r) * 2, 4).tolist(), 1, 4)) + np.matlib.repmat((2, 1, 4, 3), 1, len(np.arange(0, len(laye_r) * 2, 4).tolist()))
+                        idx_reihe = idx_reihe[0][:];  # len(idx_reihe) # idx_reihe.tolist()
+                        idx_reihe = idx_reihe[0:len(df) * 2]
+                        Lon_organised = np.zeros(len(df) * 2)
+                        Lat_organised = np.zeros(len(df) * 2)
+                        for mm in range(0, len(df) * 2):
+                            Lon_organised[mm] = Lon[int(idx_reihe[mm])]
+                            Lat_organised[mm] = Lat[int(idx_reihe[mm])]
+                        Lon = Lon_organised
+                        Lat = Lat_organised
+                
+                        
 
                 #### #### #### #### plot the track to check the track #### #### #### #### #### #### #### #### #### #### #### ####
                 plt.figure(4)
@@ -556,7 +576,7 @@ class CruiseTrackExport:
                                  , data_fram_e.iloc[0, waypoint], data_fram_e.iloc[3, waypoint]
                                  , data_fram_e.iloc[4, waypoint], data_fram_e.iloc[1, waypoint]
                                  , data_fram_e.iloc[2, waypoint]) ) for waypoint in
-                                list(range(0, 10))) )
+                                list(range(0, len(Lon)))) )
                 sys.stdout = original_stdout  # Reset the standard output to its original value
 
 
