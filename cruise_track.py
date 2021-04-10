@@ -205,7 +205,7 @@ class CruiseTrackExport:
             from PyQt5.QtCore import QVariant
             from datetime import datetime
             import matplotlib.pyplot as plt
-            import localsolver
+            #import localsolver # if better traveling salesman problem solution wanted
             import pyproj
             from pyproj import Proj
             import math
