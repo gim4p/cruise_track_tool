@@ -459,7 +459,7 @@ class CruiseTrackExport:
                 
                 df=pd.DataFrame(fea_t.attributes() for fea_t in laye_r.getFeatures(QgsFeatureRequest()))
     
-                def tsp_nn(stations_xy): #### #### quick transferred from % Author: Joseph Kirk % Email: jdkirk630@gmail.com #### ####
+                def tsp_nn(stations_xy): #### #### quickly transferred from % Author: Joseph Kirk % Email: jdkirk630@gmail.com #### ####
                     stations = list(range(0, np.size(stations_xy,0))) #### simple implementation of traveling salesman problem by nearest neighbour
                     xv,yv = np.meshgrid(stations,stations)
                     dist_mat=np.square(stations_xy.iloc[xv.flatten()].to_numpy()-stations_xy.iloc[yv.flatten()].to_numpy()) # attention: tsp nearest neighbour using lat lon (for relative idx in our lat ok)
