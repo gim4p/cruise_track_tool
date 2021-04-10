@@ -96,27 +96,14 @@
    <widget class="QLabel" name="label_3">
     <property name="geometry">
      <rect>
-      <x>300</x>
-      <y>51</y>
-      <width>198</width>
-      <height>16</height>
+      <x>310</x>
+      <y>50</y>
+      <width>191</width>
+      <height>20</height>
      </rect>
     </property>
     <property name="text">
-     <string>run through stations (e.g. grab sampling)</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_4">
-    <property name="geometry">
-     <rect>
-      <x>300</x>
-      <y>70</y>
-      <width>122</width>
-      <height>16</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>attempting to be efficient</string>
+     <string>passing stations (e.g. grab sampling)</string>
     </property>
    </widget>
    <widget class="QLabel" name="label_5">
@@ -143,19 +130,6 @@
     </property>
     <property name="text">
      <string>if it's not already done anyway</string>
-    </property>
-   </widget>
-   <widget class="QRadioButton" name="stations_in_row">
-    <property name="geometry">
-     <rect>
-      <x>330</x>
-      <y>140</y>
-      <width>131</width>
-      <height>17</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>stations/ not profiling</string>
     </property>
    </widget>
    <widget class="QFrame" name="frame_2">
@@ -281,6 +255,45 @@
      <string>every 2nd line</string>
     </property>
    </widget>
+   <widget class="QLabel" name="label_8">
+    <property name="geometry">
+     <rect>
+      <x>310</x>
+      <y>120</y>
+      <width>111</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>if it's a Point layer file</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_9">
+    <property name="geometry">
+     <rect>
+      <x>310</x>
+      <y>150</y>
+      <width>201</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string> -&gt; stations by simple implementation</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_10">
+    <property name="geometry">
+     <rect>
+      <x>330</x>
+      <y>170</y>
+      <width>151</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>of traveling salesman problem</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QToolButton" name="tb_outTrack">
    <property name="geometry">
@@ -316,19 +329,6 @@
      <width>391</width>
      <height>20</height>
     </rect>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_8">
-   <property name="geometry">
-    <rect>
-     <x>130</x>
-     <y>460</y>
-     <width>291</width>
-     <height>16</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>(at the moment still recommended to make new file always)</string>
    </property>
   </widget>
  </widget>
