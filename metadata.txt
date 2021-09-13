@@ -7,8 +7,8 @@ name=Cruise Track Export
 qgisMinimumVersion=3.0
 description=Just shall export waypoints for cruise track.
 version=0.1
-author=gia
-email=schokulele@yahoo.de
+author=gianna
+email=gimap@mail.de
 
 about=Just shall export waypoints for cruise track. Also should deal with organizing waypoints.
 

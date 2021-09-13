@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>740</width>
-    <height>636</height>
+    <width>974</width>
+    <height>584</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -16,7 +16,7 @@
   <widget class="QDialogButtonBox" name="button_box">
    <property name="geometry">
     <rect>
-     <x>500</x>
+     <x>770</x>
      <y>530</y>
      <width>171</width>
      <height>32</height>
@@ -33,8 +33,8 @@
    <property name="geometry">
     <rect>
      <x>144</x>
-     <y>50</y>
-     <width>521</width>
+     <y>30</y>
+     <width>611</width>
      <height>20</height>
     </rect>
    </property>
@@ -43,7 +43,7 @@
    <property name="geometry">
     <rect>
      <x>50</x>
-     <y>50</y>
+     <y>30</y>
      <width>81</width>
      <height>16</height>
     </rect>
@@ -56,9 +56,9 @@
    <property name="geometry">
     <rect>
      <x>40</x>
-     <y>109</y>
-     <width>631</width>
-     <height>311</height>
+     <y>89</y>
+     <width>901</width>
+     <height>371</height>
     </rect>
    </property>
    <property name="frameShape">
@@ -71,7 +71,7 @@
     <property name="geometry">
      <rect>
       <x>180</x>
-      <y>160</y>
+      <y>140</y>
       <width>131</width>
       <height>17</height>
      </rect>
@@ -83,10 +83,10 @@
    <widget class="Line" name="line">
     <property name="geometry">
      <rect>
-      <x>310</x>
-      <y>40</y>
+      <x>290</x>
+      <y>0</y>
       <width>20</width>
-      <height>271</height>
+      <height>371</height>
      </rect>
     </property>
     <property name="orientation">
@@ -96,34 +96,34 @@
    <widget class="QLabel" name="label_3">
     <property name="geometry">
      <rect>
-      <x>370</x>
-      <y>50</y>
-      <width>231</width>
+      <x>330</x>
+      <y>40</y>
+      <width>261</width>
       <height>20</height>
      </rect>
     </property>
     <property name="text">
-     <string>passing stations (e.g. grab sampling)</string>
+     <string>efficiently passing stations (e.g. grab sampling)</string>
     </property>
    </widget>
    <widget class="QLabel" name="label_5">
     <property name="geometry">
      <rect>
       <x>42</x>
-      <y>53</y>
+      <y>43</y>
       <width>211</width>
       <height>16</height>
      </rect>
     </property>
     <property name="text">
-     <string>if we want to organize the tracks</string>
+     <string>if we want to organize parallel tracks</string>
     </property>
    </widget>
    <widget class="QLabel" name="label_6">
     <property name="geometry">
      <rect>
       <x>42</x>
-      <y>72</y>
+      <y>62</y>
       <width>201</width>
       <height>16</height>
      </rect>
@@ -136,7 +136,7 @@
     <property name="geometry">
      <rect>
       <x>40</x>
-      <y>220</y>
+      <y>200</y>
       <width>191</width>
       <height>71</height>
      </rect>
@@ -182,32 +182,19 @@
      <rect>
       <x>10</x>
       <y>10</y>
-      <width>101</width>
+      <width>211</width>
       <height>17</height>
      </rect>
     </property>
     <property name="text">
-     <string>accessory</string>
-    </property>
-   </widget>
-   <widget class="Line" name="line_2">
-    <property name="geometry">
-     <rect>
-      <x>0</x>
-      <y>30</y>
-      <width>631</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="orientation">
-     <enum>Qt::Horizontal</enum>
+     <string>accessory parallel tracks</string>
     </property>
    </widget>
    <widget class="QLabel" name="label_7">
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>180</y>
+      <y>160</y>
       <width>171</width>
       <height>16</height>
      </rect>
@@ -220,7 +207,7 @@
     <property name="geometry">
      <rect>
       <x>20</x>
-      <y>120</y>
+      <y>100</y>
       <width>71</width>
       <height>17</height>
      </rect>
@@ -233,7 +220,7 @@
     <property name="geometry">
      <rect>
       <x>20</x>
-      <y>160</y>
+      <y>140</y>
       <width>141</width>
       <height>17</height>
      </rect>
@@ -246,7 +233,7 @@
     <property name="geometry">
      <rect>
       <x>180</x>
-      <y>120</y>
+      <y>100</y>
       <width>131</width>
       <height>17</height>
      </rect>
@@ -258,20 +245,20 @@
    <widget class="QLabel" name="label_8">
     <property name="geometry">
      <rect>
-      <x>370</x>
+      <x>350</x>
       <y>120</y>
-      <width>141</width>
+      <width>181</width>
       <height>21</height>
      </rect>
     </property>
     <property name="text">
-     <string>if it's a Point layer file</string>
+     <string>executed if Point layer file</string>
     </property>
    </widget>
    <widget class="QLabel" name="label_9">
     <property name="geometry">
      <rect>
-      <x>370</x>
+      <x>350</x>
       <y>150</y>
       <width>221</width>
       <height>16</height>
@@ -284,7 +271,7 @@
    <widget class="QLabel" name="label_10">
     <property name="geometry">
      <rect>
-      <x>390</x>
+      <x>370</x>
       <y>170</y>
       <width>181</width>
       <height>16</height>
@@ -294,12 +281,112 @@
      <string>of traveling salesman problem</string>
     </property>
    </widget>
+   <widget class="Line" name="line_5">
+    <property name="geometry">
+     <rect>
+      <x>590</x>
+      <y>0</y>
+      <width>20</width>
+      <height>371</height>
+     </rect>
+    </property>
+    <property name="orientation">
+     <enum>Qt::Vertical</enum>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_12">
+    <property name="geometry">
+     <rect>
+      <x>660</x>
+      <y>40</y>
+      <width>161</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>individual trackline</string>
+    </property>
+   </widget>
+   <widget class="QRadioButton" name="individualtrackline">
+    <property name="geometry">
+     <rect>
+      <x>660</x>
+      <y>130</y>
+      <width>191</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>follow individual line</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_13">
+    <property name="geometry">
+     <rect>
+      <x>660</x>
+      <y>60</y>
+      <width>231</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>recommended to only insert one single line</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="zline_label">
+    <property name="geometry">
+     <rect>
+      <x>700</x>
+      <y>270</y>
+      <width>91</width>
+      <height>81</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="pixmap">
+     <pixmap>:/plugins/cruise_track/zline.png</pixmap>
+    </property>
+   </widget>
+   <widget class="QLabel" name="zpoints_label">
+    <property name="geometry">
+     <rect>
+      <x>390</x>
+      <y>270</y>
+      <width>91</width>
+      <height>81</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="pixmap">
+     <pixmap>:/plugins/cruise_track/zpoints.png</pixmap>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_14">
+    <property name="geometry">
+     <rect>
+      <x>90</x>
+      <y>290</y>
+      <width>91</width>
+      <height>51</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="pixmap">
+     <pixmap>:/plugins/cruise_track/ztracks.png</pixmap>
+    </property>
+   </widget>
   </widget>
   <widget class="QToolButton" name="tb_outTrack">
    <property name="geometry">
     <rect>
-     <x>620</x>
-     <y>490</y>
+     <x>710</x>
+     <y>530</y>
      <width>41</width>
      <height>19</height>
     </rect>
@@ -312,7 +399,7 @@
    <property name="geometry">
     <rect>
      <x>40</x>
-     <y>490</y>
+     <y>530</y>
      <width>101</width>
      <height>16</height>
     </rect>
@@ -325,8 +412,8 @@
    <property name="geometry">
     <rect>
      <x>143</x>
-     <y>490</y>
-     <width>461</width>
+     <y>530</y>
+     <width>551</width>
      <height>20</height>
     </rect>
    </property>
@@ -335,7 +422,7 @@
    <property name="geometry">
     <rect>
      <x>40</x>
-     <y>440</y>
+     <y>480</y>
      <width>71</width>
      <height>16</height>
     </rect>
@@ -348,7 +435,7 @@
    <property name="geometry">
     <rect>
      <x>80</x>
-     <y>430</y>
+     <y>470</y>
      <width>421</width>
      <height>41</height>
     </rect>
@@ -424,6 +511,35 @@
      <string>.rt3</string>
     </property>
    </widget>
+  </widget>
+  <widget class="QLabel" name="label_11">
+   <property name="geometry">
+    <rect>
+     <x>150</x>
+     <y>60</y>
+     <width>341</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>input layers should be geocentric (WGS 84)</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_15">
+   <property name="geometry">
+    <rect>
+     <x>880</x>
+     <y>10</y>
+     <width>51</width>
+     <height>51</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+   <property name="pixmap">
+    <pixmap>:/plugins/cruise_track/icon.png</pixmap>
+   </property>
   </widget>
  </widget>
  <resources/>

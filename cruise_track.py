@@ -8,8 +8,8 @@
                               -------------------
         begin                : 2021-04-01
         git sha              : $Format:%H$
-        copyright            : (C) 2021 by gia
-        email                : schokulele@yahoo.de
+        copyright            : (C) 2021 by Gianna Persichini
+        email                : gimap@mail.de
  ***************************************************************************/
 
 /***************************************************************************
@@ -174,7 +174,6 @@ class CruiseTrackExport:
             self.iface.removePluginMenu(self.tr(u'&Cruise Track Export'), action)
             self.iface.removeToolBarIcon(action)
 
-    
     def select_output_file(self):  # added
                 
         filename, _filter = QFileDialog.getSaveFileName(self.dlg, "Select   output file ", "")
@@ -185,13 +184,11 @@ class CruiseTrackExport:
         elif self.dlg.cvt_button.isChecked():
             filename = filename + '.cvt'
         else:
-            filename = filename + '.rt3'    
+            filename = filename + '.cvt'    
         
         #print(filename)
         self.dlg.le_outTrack.setText(filename)
         
-        
-
     def run(self):
         # Create the dialog with elements (after translation) and keep reference
         # Only create GUI ONCE in callback, so that it will only load when the plugin is started
@@ -206,7 +203,7 @@ class CruiseTrackExport:
 
         self.dlg.show()  # show the dialog
         result = self.dlg.exec_()  # Run the dialog event loop
-        if result:  ######## PyQgis start ########
+        if result:  #### #### PyQgis start #### ####
 
             from statistics import mean, median, mode, stdev
             import numpy as np
@@ -219,12 +216,197 @@ class CruiseTrackExport:
             from PyQt5.QtCore import QVariant
             from datetime import datetime
             import matplotlib.pyplot as plt
-            #import localsolver # if better traveling salesman problem solution wanted; but library not default in qgis!
+            #import localsolver # if better traveling salesman problem solution wanted; but attention, non default library in qgis!
             import pyproj
             from pyproj import Proj
             import math
-            
+
             #### #### #### #### #### #### #### #### #### #### #### #### #### #### #### ####
+            #### #### internal functions #### #### 
+            
+            def tsp_nn(stations_xy): #### quickly transferred from matlab function by Joseph Kirk % Email: jdkirk630@gmail.com
+                    stations = list(range(0, np.size(stations_xy,0))) #### simple implementation of traveling salesman problem by nearest neighbour
+                    xv,yv = np.meshgrid(stations,stations)
+                    dist_mat=np.square(stations_xy.iloc[xv.flatten()].to_numpy()-stations_xy.iloc[yv.flatten()].to_numpy()) # attention: tsp nearest neighbour using lat lon (for relative idx in our lat ok)
+                    dist_mat=np.sqrt(dist_mat.sum(1))
+                    dist_mat=np.reshape(dist_mat, (len(stations),len(stations)))
+                    
+                    
+                    pop = np.zeros((len(stations),len(stations)))
+                    optimal_distances_vec=np.zeros(len(stations))
+                    
+                    for nn in list(range(0,len(optimal_distances_vec))):
+                        d=0
+                        thisRte = np.zeros(len(stations))
+                        visited = np.zeros(len(stations))
+                        I=nn
+                        visited[I] = 1
+                        thisRte[1] = I
+                        
+                        for mm in list(range(0,len(stations)-1)):
+                            dists = dist_mat[I,:]
+                            dists[visited==1] = np.nan # manipulating the vector derived from an array changes here the array wtf, no idea why, yet -> dump but for now define dist_mat new
+                            J = np.nanargmin(dists)
+                            visited[J] = 1
+                            thisRte[mm+1] = J
+                            d = d + dist_mat[I,J]
+                            I = J
+                            dist_mat=np.square(stations_xy.iloc[xv.flatten()].to_numpy()-stations_xy.iloc[yv.flatten()].to_numpy())
+                            dist_mat=np.sqrt(dist_mat.sum(1))
+                            dist_mat=np.reshape(dist_mat, (len(stations),len(stations)))
+                            
+                        d = d + dist_mat[I,nn]
+                        pop[nn,:] = thisRte
+                        optimal_distances_vec[nn] = d
+                    
+                    optRoute = pop[optimal_distances_vec.argmin()]
+                    return optRoute
+           
+            def fprintf_copy(stream, format_spec, *args):
+                stream.write(format_spec % args)
+            
+            def utmToLatLng(zone, easting, northing, northernHemisphere=True):  #### copied from Staale (https://stackoverflow.com/users/story/3355)
+                if not northernHemisphere:
+                    northing = 10000000 - northing
+                a = 6378137
+                e = 0.081819191
+                e1sq = 0.006739497
+                k0 = 0.9996
+                arc = northing / k0
+                mu = arc / (a * (1 - math.pow(e, 2) / 4.0 - 3 * math.pow(e, 4) / 64.0 - 5 * math.pow(e, 6) / 256.0))
+                ei = (1 - math.pow((1 - e * e), (1 / 2.0))) / (1 + math.pow((1 - e * e), (1 / 2.0)))
+                ca = 3 * ei / 2 - 27 * math.pow(ei, 3) / 32.0
+                cb = 21 * math.pow(ei, 2) / 16 - 55 * math.pow(ei, 4) / 32
+                cc = 151 * math.pow(ei, 3) / 96
+                cd = 1097 * math.pow(ei, 4) / 512
+                phi1 = mu + ca * math.sin(2 * mu) + cb * math.sin(4 * mu) + cc * math.sin(6 * mu) + cd * math.sin(8 * mu)
+                n0 = a / math.pow((1 - math.pow((e * math.sin(phi1)), 2)), (1 / 2.0))
+                r0 = a * (1 - e * e) / math.pow((1 - math.pow((e * math.sin(phi1)), 2)), (3 / 2.0))
+                fact1 = n0 * math.tan(phi1) / r0
+                _a1 = 500000 - easting
+                dd0 = _a1 / (n0 * k0)
+                fact2 = dd0 * dd0 / 2
+                t0 = math.pow(math.tan(phi1), 2)
+                Q0 = e1sq * math.pow(math.cos(phi1), 2)
+                fact3 = (5 + 3 * t0 + 10 * Q0 - 4 * Q0 * Q0 - 9 * e1sq) * math.pow(dd0, 4) / 24
+                fact4 = (61 + 90 * t0 + 298 * Q0 + 45 * t0 * t0 - 252 * e1sq - 3 * Q0 * Q0) * math.pow(dd0, 6) / 720
+                lof1 = _a1 / (n0 * k0)
+                lof2 = (1 + 2 * t0 + Q0) * math.pow(dd0, 3) / 6.0
+                lof3 = (5 - 2 * Q0 + 28 * t0 - 3 * math.pow(Q0, 2) + 8 * e1sq + 24 * math.pow(t0, 2)) * math.pow(dd0, 5) / 120
+                _a2 = (lof1 - lof2 + lof3) / math.cos(phi1)
+                _a3 = _a2 * 180 / math.pi
+                latitude = 180 * (phi1 - fact1 * (fact2 + fact3 + fact4)) / math.pi
+                if not northernHemisphere:
+                    latitude = -latitude
+                longitude = ((zone > 0) and (6 * zone - 183.0) or 3.0) - _a3
+                return (latitude, longitude)
+            
+            def RT3_export(Lon, Lat): #### RT3 file export, copied from Marius Becker (working group member), translated to python
+                filename = self.dlg.le_outTrack.text()
+                original_stdout = sys.stdout # save a reference to the original standard output
+                now = datetime.now()
+                datestring=now.strftime("%d/%m/%Y %H:%M:%S")
+                backslashpositions=[i for i in range(len(filename)) if filename.startswith("/", i)]
+                backslashpositions=backslashpositions[len(backslashpositions)-1]
+                fname=filename[backslashpositions+1:]
+                with open(filename, "a") as f_out:
+                    f_out.seek(0)
+                    f_out.truncate()
+                    f_out.write('<TSH_Route RtName="'+fname+'" RtVersion="3" Checked="1" CheckTime="43951.515255">\nTSH RtServer route data file. Info: amo.\n<WayPoints WPCount="'+str(len(Lat))+'" IdCounter="'+str(len(Lat))+'">\n')  
+                    f_out.close()
+                with open(filename, "a") as f_out:
+                    sys.stdout = f_out  # Change the standard output to the file we created.
+                    print( ''.join(str(fprintf_copy(sys.stdout,
+                                     '<WayPoint Id="%.0f" WPName="%03.f" LegType="0" Lat="%.6f" Lon="%.6f" PortXTE="0.000000" StbXTE="0.000000" TurnRate="0.000000" TurnRadius="0.000000" SafetyContour="30.000000" SafetyDepth="30.000000" RudderAngle="0.000000" ArrivalC="0.000000" FlowPoint="off"/>\n'
+                                     , waypoint+1, waypoint+1
+                                     , Lat[waypoint]*60, Lon[waypoint]*60) ) for waypoint in list(range(0, len(Lon)))) )
+                    sys.stdout = original_stdout  # Reset the standard output to its original value
+                #### still unable making filling info during loop correct -> last line 'None'*nb of Positions -> for making it work quickly, just cut out last line (later finding error in loop)
+                readFile = open(filename)
+                lines = readFile.readlines()
+                readFile.close()
+                w = open(filename,'w')
+                w.writelines([item for item in lines[:-1]])
+                w.close()
+            
+            def RTZ_export(Lon, Lat): #### RTZ file export, copied from Knut Krämer (working group member), translated to python
+                if np.median(Lon) > 360: # wants decimal degree, if UTM --> switch
+                    laye_rs=QgsProject.instance()
+                    zone = laye_rs.crs().authid() # returns a reference to the active QgsMapLayer
+                    Lat, Lon=utmToLatLng(zone, Lon, Lat, northernHemisphere=True)
+                filename = self.dlg.le_outTrack.text()
+                original_stdout = sys.stdout # Save a reference to the original standard output
+                now = datetime.now()
+                datestring=now.strftime("%d/%m/%Y %H:%M:%S")
+                backslashpositions=[i for i in range(len(filename)) if filename.startswith("/", i)]
+                backslashpositions=backslashpositions[len(backslashpositions)-1]
+                #fname=(filename[backslashpositions+1:]+'_'+datestring)
+                fname=filename[backslashpositions+1:]
+                with open(filename, "a") as f_out:
+                    f_out.seek(0)
+                    f_out.truncate()
+                    f_out.write('<?xml version="1.0" encoding="UTF-8"?>\n<route xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.acme.com/RTZ/1/0" version="1.0" xsi:schemaLocation="http://www.acme.com/RTZ/1/0 rtz.xsd">\n<routeInfo routeName="'+fname+'"/>\n<waypoints>\n<defaultWaypoint>\n<leg porlintsideXTD="0.00" starboardXTD="0.00" safetyContour="10.00" safetyDepth="10.00" geometryType="Loxodrome"/>\n</defaultWaypoint>\n')  
+                    f_out.close()
+                with open(filename, "a") as f_out:
+                    sys.stdout = f_out  # change the standard output to the file we created.
+                    print( ''.join(str(fprintf_copy(sys.stdout,
+                                    '<waypoint id="%03d">\n<position lat="%.10f" lon="%.10f"/>\n</waypoint>\n'
+                                    , waypoint+1, Lat[waypoint], Lon[waypoint])) for waypoint in list(range(0, len(Lon)))) )
+     
+                    sys.stdout = original_stdout  # Reset the standard output to its original value
+                #### still unable making filling info during loop correct -> last line 'None'*nb of Positions -> for making it work quickly, just cut out last line (later finding error in loop)
+                readFile = open(filename)
+                lines = readFile.readlines()
+                readFile.close()
+                w = open(filename,'w')
+                w.writelines([item for item in lines[:-1]])
+                w.close()
+            
+            def CSV_export(Lon, Lat): #### CSV file export
+                if np.median(Lon) > 360: # wants decimal degree
+                    lay_er = QgsProject.instance().mapLayersByName("testestUTM")[0]
+                    zone = layers.crs() # returns a reference to the active QgsMapLayer
+                    print(zone)
+                    Lat, Lon=utmToLatLng(zone, Lon, Lat, northernHemisphere=True)
+                # decimal degree into DD MM.MMMMM
+                DD_lon = np.floor(Lon); DD_lat = np.floor(Lat) # make DD MM.MMMMM
+                DM_lon = np.array(Lon - DD_lon) * 60; DM_lat = np.array(Lat - DD_lat) * 60;
+                WP = range(1, len(Lon)+1)
+                data_arra_y = np.array([WP, DD_lon, DM_lon, DD_lat, DM_lat])
+                data_fram_e = pd.DataFrame(data_arra_y) 
+                #### make format and export file
+                now = datetime.now()
+                datestring=now.strftime("%d/%m/%Y %H:%M:%S")
+                filename = self.dlg.le_outTrack.text()
+                backslashpositions=[i for i in range(len(filename)) if filename.startswith("/", i)]
+                backslashpositions=backslashpositions[len(backslashpositions)-1]
+                #fname=(filename[backslashpositions+1:]+'_'+datestring)
+                fname=filename[backslashpositions+1:]
+                original_stdout = sys.stdout # Save a reference to the original standard output
+                with open(filename, "a") as f_out:
+                    f_out.seek(0)
+                    f_out.truncate()
+                    f_out.write(';Route '+fname+'\n')
+                    f_out.close
+                with open(filename, "a") as f_out:
+                    sys.stdout = f_out  # Change the standard output to the file we created.
+                    print( ''.join(str(fprintf_copy(sys.stdout,
+                                     ";\nWP %03.f NAME\nLAT  %.f°%.5f LON  %.f°%.5f\nRL (Rumb Line)\nXTE= 0.00nm\nTurnRadius= 0.00nm\n"
+                                     , data_fram_e.iloc[0, waypoint], data_fram_e.iloc[3, waypoint]
+                                     , data_fram_e.iloc[4, waypoint], data_fram_e.iloc[1, waypoint]
+                                     , data_fram_e.iloc[2, waypoint]) ) for waypoint in list(range(0, len(Lon)))) )
+                    sys.stdout = original_stdout  # Reset the standard output to its original value
+                #### still unable making filling info during loop correct -> last line 'None'*nb of Positions -> for making it work quickly, just cut out last line (later finding error in loop)
+                readFile = open(filename)
+                lines = readFile.readlines()
+                readFile.close()
+                w = open(filename,'w')
+                w.writelines([item for item in lines[:-1]])
+                w.close()
+                
+            #### #### #### #### #### #### #### #### #### #### #### #### #### #### #### ####
+            #### #### starting plugin decisions #### #### 
+            
             selectedLayerIndex = self.dlg.cb_inVector.currentIndex()   # Identify selected layer by its index
             ly_tree_nd = layers[selectedLayerIndex]
             laye_r = ly_tree_nd.layer() # Gives you the layer you have selected in the Layers Panel
@@ -284,7 +466,7 @@ class CruiseTrackExport:
                 if self.dlg.accessory.isChecked():
                     
                     if noneBt!=1:
-                        #### wenn chaotische linienreihenfolge -> organise by X_mean/Y-mean (nur, wenn Profile nicht sehr divers in Länge und Posiion)
+                        #### if chaotic series of coordinates -> organise by X_mean/Y-mean (just sensefull if lines are relatively organised)
                         df = df.sort_values(by=[5])
                         #### alle Linien gleich ausrichten
                         new_lon_st = np.zeros(len(df))
@@ -423,9 +605,37 @@ class CruiseTrackExport:
                         
                         arrays = np.transpose([new_lon_st, new_lon_sp, new_lat_st, new_lat_sp])
                         df = pd.DataFrame(arrays)
-
+                        
                 #else:
                     #print("track not manipulated")
+                
+                #### if individual cruise track line should be followed
+                if self.dlg.individualtrackline.isChecked():
+                    ind_track = 1
+                    Lon_series = np.zeros([len(laye_r),20])
+                    Lat_series = np.zeros([len(laye_r),20])
+                    coun_t=0
+                    for fea_t in laye_r.getFeatures():
+                        geom = fea_t.geometry().constGet()
+                        for n in list(range(len(geom[0]))):
+                            vertices_on_line=QgsPointXY(geom[0][n])
+                            Lon_series[coun_t,n]=vertices_on_line[0]
+                            Lat_series[coun_t,n]=vertices_on_line[1]
+                        coun_t=coun_t+1
+
+                    Lon=[]
+                    Lat=[]
+
+                    for n in list(range(coun_t)):
+                        Lon = Lon + list(filter(lambda num: num != 0, Lon_series[n]))
+                        Lat = Lat + list(filter(lambda num: num != 0, Lat_series[n]))
+                    
+                    arrays = [Lon, Lat]
+                    df = pd.DataFrame(arrays)
+                    df = df.T
+                else:
+                    ind_track = 0
+                
                 
                 #### flip NS
                 if self.dlg.checkBox_flipNS.isChecked():
@@ -433,15 +643,21 @@ class CruiseTrackExport:
                     
                         
                 #### #### #### #### make just two culumns Lon and Lat #### #### #### #### #### #### #### #### #### #### #### ####
-                lis_t2 = list(range(0, len(df.index) * 2))
-                odds_idx2 = lis_t2[1::2]
-                evens_idx2 = lis_t2[::2]
-                Lon = np.zeros(len(df.index) * 2)
-                Lon[odds_idx2] = df[0]
-                Lon[evens_idx2] = df[1]
-                Lat = np.zeros(len(df.index) * 2)
-                Lat[odds_idx2] = df[2]
-                Lat[evens_idx2] = df[3]
+                if self.dlg.individualtrackline.isChecked():
+                    Lon = df[0]
+                    Lat = df[1]
+                
+                else:
+                    lis_t2 = list(range(0, len(df.index) * 2))
+                    odds_idx2 = lis_t2[1::2]
+                    evens_idx2 = lis_t2[::2]
+                    Lon = np.zeros(len(df.index) * 2)
+                    Lon[odds_idx2] = df[0]
+                    Lon[evens_idx2] = df[1]
+                    Lat = np.zeros(len(df.index) * 2)
+                    Lat[odds_idx2] = df[2]
+                    Lat[evens_idx2] = df[3]
+                
                 
                 if self.dlg.normalProfiles.isChecked():
                     Lon_organised = np.zeros(len(df) * 2)
@@ -453,21 +669,20 @@ class CruiseTrackExport:
                     Lat = Lat_organised
 
                 if uncheckedaccessory==1 or noneBt==1:
-                #### flip WE for in general no further track manupulation
-                    if self.dlg.checkBox_flipWE.isChecked():
-                        idx_reihe = -1 + np.sort(np.matlib.repmat(np.arange(0, len(laye_r) * 2, 4).tolist(), 1, 4)) + np.matlib.repmat((2, 1, 4, 3), 1, len(np.arange(0, len(laye_r) * 2, 4).tolist()))
-                        idx_reihe = idx_reihe[0][:];  # len(idx_reihe) # idx_reihe.tolist()
-                        idx_reihe = idx_reihe[0:len(df) * 2]
-                        Lon_organised = np.zeros(len(df) * 2)
-                        Lat_organised = np.zeros(len(df) * 2)
-                        for mm in range(0, len(df) * 2):
-                            Lon_organised[mm] = Lon[int(idx_reihe[mm])]
-                            Lat_organised[mm] = Lat[int(idx_reihe[mm])]
-                        Lon = Lon_organised
-                        Lat = Lat_organised
+                    if ind_track!=1:
+                    #### flip WE for in general no further track manupulation
+                        if self.dlg.checkBox_flipWE.isChecked():
+                            idx_reihe = -1 + np.sort(np.matlib.repmat(np.arange(0, len(laye_r) * 2, 4).tolist(), 1, 4)) + np.matlib.repmat((2, 1, 4, 3), 1, len(np.arange(0, len(laye_r) * 2, 4).tolist()))
+                            idx_reihe = idx_reihe[0][:];  # len(idx_reihe) # idx_reihe.tolist()
+                            idx_reihe = idx_reihe[0:len(df) * 2]
+                            Lon_organised = np.zeros(len(df) * 2)
+                            Lat_organised = np.zeros(len(df) * 2)
+                            for mm in range(0, len(df) * 2):
+                                Lon_organised[mm] = Lon[int(idx_reihe[mm])]
+                                Lat_organised[mm] = Lat[int(idx_reihe[mm])]
+                            Lon = Lon_organised
+                            Lat = Lat_organised
                 
-                        
-
                 #### #### #### #### plot the track to check the track #### #### #### #### #### #### #### #### #### #### #### ####
                 plt.figure(4)
                 plt.plot(Lon, Lat, label="track")
@@ -492,53 +707,6 @@ class CruiseTrackExport:
                 
                 df=pd.DataFrame(fea_t.attributes() for fea_t in laye_r.getFeatures(QgsFeatureRequest()))
     
-                def tsp_nn(stations_xy): #### #### quickly transferred from matlab function by % Author: Joseph Kirk % Email: jdkirk630@gmail.com #### ####
-                    stations = list(range(0, np.size(stations_xy,0))) #### simple implementation of traveling salesman problem by nearest neighbour
-                    xv,yv = np.meshgrid(stations,stations)
-                    dist_mat=np.square(stations_xy.iloc[xv.flatten()].to_numpy()-stations_xy.iloc[yv.flatten()].to_numpy()) # attention: tsp nearest neighbour using lat lon (for relative idx in our lat ok)
-                    dist_mat=np.sqrt(dist_mat.sum(1))
-                    dist_mat=np.reshape(dist_mat, (len(stations),len(stations)))
-                    
-                    """
-                    def extents(f):
-                      delta = f[1] - f[0]
-                      return [f[0] - delta/2, f[-1] + delta/2]
-                      
-                    plt.imshow(dist_mat, aspect='auto', interpolation='none',
-                           extent=extents(stations) + extents(stations), origin='lower')
-                    plt.show()
-                    """
-                    
-                    pop = np.zeros((len(stations),len(stations)))
-                    optimal_distances_vec=np.zeros(len(stations))
-                    
-                    for nn in list(range(0,len(optimal_distances_vec))):
-                        d=0
-                        thisRte = np.zeros(len(stations))
-                        visited = np.zeros(len(stations))
-                        I=nn
-                        visited[I] = 1
-                        thisRte[1] = I
-                        
-                        for mm in list(range(0,len(stations)-1)):
-                            dists = dist_mat[I,:]
-                            dists[visited==1] = np.nan # manipulating the vector derived from an array changes here the array wtf, no idea why, yet -> dump but for now define dist_mat new
-                            J = np.nanargmin(dists)
-                            visited[J] = 1
-                            thisRte[mm+1] = J
-                            d = d + dist_mat[I,J]
-                            I = J
-                            dist_mat=np.square(stations_xy.iloc[xv.flatten()].to_numpy()-stations_xy.iloc[yv.flatten()].to_numpy())
-                            dist_mat=np.sqrt(dist_mat.sum(1))
-                            dist_mat=np.reshape(dist_mat, (len(stations),len(stations)))
-                            
-                        d = d + dist_mat[I,nn]
-                        pop[nn,:] = thisRte
-                        optimal_distances_vec[nn] = d
-                    
-                    optRoute = pop[optimal_distances_vec.argmin()]
-                    return optRoute
-                
                 station_order=tsp_nn(df)
                 station_order=station_order.tolist()
                 
@@ -555,157 +723,14 @@ class CruiseTrackExport:
                 plt.legend()
                 plt.show()
             
-            def fprintf_copy(stream, format_spec, *args):
-                stream.write(format_spec % args)
             
-            
-            
-            
+            ############################################################# export text file for transas
+            #############################################################
             if self.dlg.rt3_button.isChecked():
-                #### #### #### #### RT3 file export #### #### #### #### #### #### #### #### #### ####
-                # copied from Marius
-                filename = self.dlg.le_outTrack.text()
-                original_stdout = sys.stdout # Save a reference to the original standard output
-                now = datetime.now()
-                datestring=now.strftime("%d/%m/%Y %H:%M:%S")
-                backslashpositions=[i for i in range(len(filename)) if filename.startswith("/", i)]
-                backslashpositions=backslashpositions[len(backslashpositions)-1]
-                #fname=(filename[backslashpositions+1:]+'_'+datestring)
-                fname=filename[backslashpositions+1:]
-                
-                with open(filename, "a") as f_out:
-                    f_out.seek(0)
-                    f_out.truncate()
-                    f_out.write('<TSH_Route RtName="'+fname+'" RtVersion="3" Checked="1" CheckTime="43951.515255">\nTSH RtServer route data file. Info: amo.\n<WayPoints WPCount="'+str(len(Lat))+'" IdCounter="'+str(len(Lat))+'">\n')  
-                    f_out.close()
-                    
-                with open(filename, "a") as f_out:
-                    sys.stdout = f_out  # Change the standard output to the file we created.
-                    print( ''.join(str(fprintf_copy(sys.stdout,
-                                     '<WayPoint Id="%.0f" WPName="%03.f" LegType="0" Lat="%.6f" Lon="%.6f" PortXTE="0.000000" StbXTE="0.000000" TurnRate="0.000000" TurnRadius="0.000000" SafetyContour="30.000000" SafetyDepth="30.000000" RudderAngle="0.000000" ArrivalC="0.000000" FlowPoint="off"/>\n'
-                                     , waypoint+1, waypoint+1
-                                     , Lat[waypoint]*60, Lon[waypoint]*60) ) for waypoint in list(range(0, len(Lon)))) )
-                    sys.stdout = original_stdout  # Reset the standard output to its original value
-                
-                #### somehow, the loop, filling info into the file is corrupt -> last line 'None'*nb of Positions -> for making it work quickly, just cut out last line (later finding error in loop)
-                readFile = open(filename)
-                lines = readFile.readlines()
-                readFile.close()
-                w = open(filename,'w')
-                w.writelines([item for item in lines[:-1]])
-                w.close()
-                    
-                
-                ####
-                  
+                RT3_export(Lon, Lat) #### RT3 file export
             elif self.dlg.rtz_button.isChecked():
-                #### #### #### #### RTZ file export #### #### #### #### #### #### #### #### #### ####
-                # copied from Knut
-                filename = self.dlg.le_outTrack.text()
-                original_stdout = sys.stdout # Save a reference to the original standard output
-                now = datetime.now()
-                datestring=now.strftime("%d/%m/%Y %H:%M:%S")
-                backslashpositions=[i for i in range(len(filename)) if filename.startswith("/", i)]
-                backslashpositions=backslashpositions[len(backslashpositions)-1]
-                #fname=(filename[backslashpositions+1:]+'_'+datestring)
-                fname=filename[backslashpositions+1:]
-                
-                with open(filename, "a") as f_out:
-                    f_out.seek(0)
-                    f_out.truncate()
-                    f_out.write('<?xml version="1.0" encoding="UTF-8"?>\n<route xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.acme.com/RTZ/1/0" version="1.0" xsi:schemaLocation="http://www.acme.com/RTZ/1/0 rtz.xsd">\n<routeInfo routeName="'+fname+'"/>\n<waypoints>\n<defaultWaypoint>\n<leg porlintsideXTD="0.00" starboardXTD="0.00" safetyContour="10.00" safetyDepth="10.00" geometryType="Loxodrome"/>\n</defaultWaypoint>\n')  
-                    f_out.close()
-                    
-                with open(filename, "a") as f_out:
-                    sys.stdout = f_out  # Change the standard output to the file we created.
-                    print( ''.join(str(fprintf_copy(sys.stdout,
-                                    '<waypoint id="%03d">\n<position lat="%.10f" lon="%.10f"/>\n</waypoint>\n'
-                                    , waypoint+1, Lat[waypoint], Lon[waypoint])) for waypoint in list(range(0, len(Lon)))) )
-     
-                    sys.stdout = original_stdout  # Reset the standard output to its original value
-                
-                #### somehow, the loop, filling info into the file is corrupt -> last line 'None'*nb of Positions -> for making it work quickly, just cut out last line (later finding error in loop)
-                readFile = open(filename)
-                lines = readFile.readlines()
-                readFile.close()
-                w = open(filename,'w')
-                w.writelines([item for item in lines[:-1]])
-                w.close()
-                
-                
+                RTZ_export(Lon, Lat) #### RTZ file export
             elif self.dlg.cvt_button.isChecked():
-                #### #### #### #### CSV file export #### #### #### #### #### #### #### #### #### ####
-                DD_lon = np.floor(Lon); DD_lat = np.floor(Lat) # make DD MM.MMMMM
-                DM_lon = np.array(Lon - DD_lon) * 60; DM_lat = np.array(Lat - DD_lat) * 60;
-                WP = range(1, len(Lon)+1)
-                data_arra_y = np.array([WP, DD_lon, DM_lon, DD_lat, DM_lat])
-                data_fram_e = pd.DataFrame(data_arra_y) 
-                #### make format and export file
-                now = datetime.now()
-                datestring=now.strftime("%d/%m/%Y %H:%M:%S")
-                filename = self.dlg.le_outTrack.text()
-                backslashpositions=[i for i in range(len(filename)) if filename.startswith("/", i)]
-                backslashpositions=backslashpositions[len(backslashpositions)-1]
-                #fname=(filename[backslashpositions+1:]+'_'+datestring)
-                fname=filename[backslashpositions+1:]
-                
-                original_stdout = sys.stdout # Save a reference to the original standard output
-
-                with open(filename, "a") as f_out:
-                    f_out.seek(0)
-                    f_out.truncate()
-                    f_out.write(';Route '+fname+'\n')
-                    f_out.close
-                    
-                with open(filename, "a") as f_out:
-                    
-                    sys.stdout = f_out  # Change the standard output to the file we created.
-                    print( ''.join(str(fprintf_copy(sys.stdout,
-                                     ";\nWP %03.f NAME\nLAT  %.f°%.5f LON  %.f°%.5f\nRL (Rumb Line)\nXTE= 0.00nm\nTurnRadius= 0.00nm\n"
-                                     , data_fram_e.iloc[0, waypoint], data_fram_e.iloc[3, waypoint]
-                                     , data_fram_e.iloc[4, waypoint], data_fram_e.iloc[1, waypoint]
-                                     , data_fram_e.iloc[2, waypoint]) ) for waypoint in list(range(0, len(Lon)))) )
-                    sys.stdout = original_stdout  # Reset the standard output to its original value
-                
-                #### somehow, the loop, filling info into the file is corrupt -> last line 'None'*nb of Positions -> for making it work quickly, just cut out last line (later finding error in loop)
-                readFile = open(filename)
-                lines = readFile.readlines()
-                readFile.close()
-                w = open(filename,'w')
-                w.writelines([item for item in lines[:-1]])
-                w.close()
-                
-            
+                CSV_export(Lon, Lat) #### CSV file export
             else:
-                #### #### #### #### RT3 file export #### #### #### #### #### #### #### #### #### ####
-                # copied from Marius
-                filename = self.dlg.le_outTrack.text()
-                original_stdout = sys.stdout # Save a reference to the original standard output
-                now = datetime.now()
-                datestring=now.strftime("%d/%m/%Y %H:%M:%S")
-                backslashpositions=[i for i in range(len(filename)) if filename.startswith("/", i)]
-                backslashpositions=backslashpositions[len(backslashpositions)-1]
-                #fname=(filename[backslashpositions+1:]+'_'+datestring)
-                fname=filename[backslashpositions+1:]
-                
-                with open(filename, "a") as f_out:
-                    f_out.seek(0)
-                    f_out.truncate()
-                    f_out.write('<TSH_Route RtName="'+fname+'" RtVersion="3" Checked="1" CheckTime="43951.515255">\nTSH RtServer route data file. Info: amo.\n<WayPoints WPCount="'+str(len(Lat))+'" IdCounter="'+str(len(Lat))+'">\n')  
-                    f_out.close()
-                    
-                with open(filename, "a") as f_out:
-                    sys.stdout = f_out  # Change the standard output to the file we created.
-                    print( ''.join(str(fprintf_copy(sys.stdout,
-                                     '<WayPoint Id="%.0f" WPName="%03.f" LegType="0" Lat="%.6f" Lon="%.6f" PortXTE="0.000000" StbXTE="0.000000" TurnRate="0.000000" TurnRadius="0.000000" SafetyContour="30.000000" SafetyDepth="30.000000" RudderAngle="0.000000" ArrivalC="0.000000" FlowPoint="off"/>\n'
-                                     , waypoint+1, waypoint+1
-                                     , Lat[waypoint]*60, Lon[waypoint]*60) ) for waypoint in list(range(0, len(Lon)))) )
-                    sys.stdout = original_stdout  # Reset the standard output to its original value
-                
-                #### somehow, the loop, filling info into the file is corrupt -> last line 'None'*nb of Positions -> for making it work quickly, just cut out last line (later finding error in loop)
-                readFile = open(filename)
-                lines = readFile.readlines()
-                readFile.close()
-                w = open(filename,'w')
-                w.writelines([item for item in lines[:-1]])
-                w.close()
+                CSV_export(Lon, Lat)
