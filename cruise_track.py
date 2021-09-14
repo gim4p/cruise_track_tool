@@ -223,7 +223,7 @@ class CruiseTrackExport:
 
             #### #### #### #### #### #### #### #### #### #### #### #### #### #### #### ####
             #### #### internal functions #### #### 
-            
+            '''
             def tsp_nn(stations_xy): #### quickly transferred from matlab function by Joseph Kirk % Email: jdkirk630@gmail.com
                     stations = list(range(0, np.size(stations_xy,0))) #### simple implementation of traveling salesman problem by nearest neighbour
                     xv,yv = np.meshgrid(stations,stations)
@@ -261,7 +261,8 @@ class CruiseTrackExport:
                     
                     optRoute = pop[optimal_distances_vec.argmin()]
                     return optRoute
-           
+            '''
+            
             def fprintf_copy(stream, format_spec, *args):
                 stream.write(format_spec % args)
             
@@ -330,10 +331,15 @@ class CruiseTrackExport:
                 w.close()
             
             def RTZ_export(Lon, Lat): #### RTZ file export, copied from Knut Krämer (working group member), translated to python
+                
                 if np.median(Lon) > 360: # wants decimal degree, if UTM --> switch
+                    print('not implemented yet')
+                    '''
                     laye_rs=QgsProject.instance()
                     zone = laye_rs.crs().authid() # returns a reference to the active QgsMapLayer
                     Lat, Lon=utmToLatLng(zone, Lon, Lat, northernHemisphere=True)
+                    '''
+                
                 filename = self.dlg.le_outTrack.text()
                 original_stdout = sys.stdout # Save a reference to the original standard output
                 now = datetime.now()
@@ -364,10 +370,14 @@ class CruiseTrackExport:
             
             def CSV_export(Lon, Lat): #### CSV file export
                 if np.median(Lon) > 360: # wants decimal degree
+                    print('not implemented yet')
+                    '''
                     lay_er = QgsProject.instance().mapLayersByName("testestUTM")[0]
                     zone = layers.crs() # returns a reference to the active QgsMapLayer
                     print(zone)
                     Lat, Lon=utmToLatLng(zone, Lon, Lat, northernHemisphere=True)
+                    '''
+                    
                 # decimal degree into DD MM.MMMMM
                 DD_lon = np.floor(Lon); DD_lat = np.floor(Lat) # make DD MM.MMMMM
                 DM_lon = np.array(Lon - DD_lon) * 60; DM_lat = np.array(Lat - DD_lat) * 60;
