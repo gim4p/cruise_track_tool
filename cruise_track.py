@@ -223,7 +223,7 @@ class CruiseTrackExport:
 
             #### #### #### #### #### #### #### #### #### #### #### #### #### #### #### ####
             #### #### internal functions #### #### 
-            '''
+            
             def tsp_nn(stations_xy): #### quickly transferred from matlab function by Joseph Kirk % Email: jdkirk630@gmail.com
                     stations = list(range(0, np.size(stations_xy,0))) #### simple implementation of traveling salesman problem by nearest neighbour
                     xv,yv = np.meshgrid(stations,stations)
@@ -261,11 +261,12 @@ class CruiseTrackExport:
                     
                     optRoute = pop[optimal_distances_vec.argmin()]
                     return optRoute
-            '''
+            
             
             def fprintf_copy(stream, format_spec, *args):
                 stream.write(format_spec % args)
             
+            ''' not implemented yet
             def utmToLatLng(zone, easting, northing, northernHemisphere=True):  #### copied from Staale (https://stackoverflow.com/users/story/3355)
                 if not northernHemisphere:
                     northing = 10000000 - northing
@@ -301,6 +302,7 @@ class CruiseTrackExport:
                     latitude = -latitude
                 longitude = ((zone > 0) and (6 * zone - 183.0) or 3.0) - _a3
                 return (latitude, longitude)
+            '''
             
             def RT3_export(Lon, Lat): #### RT3 file export, copied from Marius Becker (working group member), translated to python
                 filename = self.dlg.le_outTrack.text()
