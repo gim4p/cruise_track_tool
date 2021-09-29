@@ -624,8 +624,8 @@ class CruiseTrackExport:
                 #### if individual cruise track line should be followed
                 if self.dlg.individualtrackline.isChecked():
                     ind_track = 1
-                    Lon_series = np.zeros([len(laye_r),20])
-                    Lat_series = np.zeros([len(laye_r),20])
+                    Lon_series = np.zeros([len(laye_r),200])
+                    Lat_series = np.zeros([len(laye_r),200])
                     coun_t=0
                     for fea_t in laye_r.getFeatures():
                         geom = fea_t.geometry().constGet()
