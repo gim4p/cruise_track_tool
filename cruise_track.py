@@ -212,7 +212,7 @@ class CruiseTrackExport:
             import os
             import sys
             from qgis.utils import iface
-            from qgis.core import QgsPointXY, QgsFeatureRequest, QgsField, QgsWkbTypes
+            from qgis.core import QgsPoint, QgsPointXY, QgsFeatureRequest, QgsField, QgsWkbTypes
             from PyQt5.QtCore import QVariant
             from datetime import datetime
             import matplotlib.pyplot as plt
@@ -220,6 +220,8 @@ class CruiseTrackExport:
             import pyproj
             from pyproj import Proj
             import math
+            from qgis.gui import QgsMapToolIdentifyFeature
+
 
             #### #### #### #### #### #### #### #### #### #### #### #### #### #### #### ####
             #### #### internal functions #### #### 
@@ -444,25 +446,82 @@ class CruiseTrackExport:
                                                   QgsField("X_mean", QVariant.Double)])
                     laye_r.updateFields()
 
-                #### put data from shapefile into attribute table
-                laye_r.startEditing()
+                #### #### put data from shapefile into attribute table
+                coun_t=-1
                 for fea_t in laye_r.getFeatures():
-                    geom = fea_t.geometry().asMultiPolyline()
-                    for line in geom:
-                        start_point = QgsPointXY(geom[0][0])
-                        end_point = QgsPointXY(geom[-1][-1])
-                        fea_t["X_start"] = start_point[0]
-                        fea_t["X_stop"] = end_point[0]
-                        fea_t["Y_start"] = start_point[1]
-                        fea_t["Y_stop"] = end_point[1]
-                        fea_t["length"] = fea_t.geometry().length()  # ellipsoid; noch nicht herausgefunden, wie man das umstellt (trotz geänderter Projektion)
-                        if ((abs(start_point.azimuth(end_point)) > 45) and (abs(start_point.azimuth(end_point)) < 125)):
-                            fea_t["X_mean"] = median([start_point[1], end_point[1]])
-                        else:
-                            fea_t["X_mean"] = median([start_point[0], end_point[0]])
-                        laye_r.updateFeature(fea_t)
-                laye_r.commitChanges()
-                df = pd.DataFrame(fea_t.attributes() for fea_t in laye_r.getFeatures(QgsFeatureRequest()))
+                    geom = fea_t.geometry()
+                    coun_t=coun_t+1
+                    
+                    
+                #### if just one line, with multiple points, but as normal regular profile lines wanted (additinoally accessory tasks)
+                if coun_t==0: 
+                    #print('just one line')           
+                    ## just for now double, whole script has still to be organized!
+                    if self.dlg.individualtrackline.isChecked():
+                        laye_r.startEditing()
+                        for fea_t in laye_r.getFeatures():
+                            geom = fea_t.geometry().asMultiPolyline()
+                            for line in geom:
+                                start_point = QgsPointXY(geom[0][0])
+                                end_point = QgsPointXY(geom[-1][-1])
+                                fea_t["X_start"] = start_point[0]
+                                fea_t["X_stop"] = end_point[0]
+                                fea_t["Y_start"] = start_point[1]
+                                fea_t["Y_stop"] = end_point[1]
+                                fea_t["length"] = fea_t.geometry().length()  # ellipsoid; noch nicht herausgefunden, wie man das umstellt (trotz geänderter Projektion)
+                                if ((abs(start_point.azimuth(end_point)) > 45) and (abs(start_point.azimuth(end_point)) < 125)):
+                                    fea_t["X_mean"] = median([start_point[1], end_point[1]])
+                                else:
+                                    fea_t["X_mean"] = median([start_point[0], end_point[0]])
+                                laye_r.updateFeature(fea_t)
+                        laye_r.commitChanges()
+                        df = pd.DataFrame(fea_t.attributes() for fea_t in laye_r.getFeatures(QgsFeatureRequest()))
+                    else:
+                        
+                        geom = fea_t.geometry().asMultiPolyline()
+                        for line in geom:
+                            nb_points=len(line)
+                            pointseries_X=np.zeros(nb_points)
+                            pointseries_Y=np.zeros(nb_points)
+                            for nn in list(range(0, nb_points)):
+                                temp=line[nn]
+                                pointseries_X[nn]=temp[0]
+                                pointseries_Y[nn]=temp[1]
+                        
+                        temp1=QgsPoint(pointseries_X[0], pointseries_Y[0])
+                        temp2=QgsPoint(pointseries_X[1], pointseries_Y[1])
+                        
+                        if ((abs(temp1.azimuth(temp2))>45) and (abs(temp1.azimuth(temp2))<125)):
+                            arrays = np.transpose( [ pointseries_X[::2],pointseries_X[1::2],pointseries_Y[::2],pointseries_Y[1::2],
+                                                    np.mean([ pointseries_Y[::2],pointseries_Y[1::2]],0 ),
+                                                    np.mean([ pointseries_Y[::2],pointseries_Y[1::2]],0 ) ] )
+                        else:       
+                            arrays = np.transpose( [ pointseries_X[::2],pointseries_X[1::2],pointseries_Y[::2],pointseries_Y[1::2],
+                                                    np.mean([ pointseries_Y[::2],pointseries_Y[1::2]],0 ),
+                                                    np.mean([ pointseries_X[::2],pointseries_X[1::2]],0 ) ] )                    
+                        df = pd.DataFrame(arrays)
+                #### ####
+                else:
+                    laye_r.startEditing()
+                    for fea_t in laye_r.getFeatures():
+                        geom = fea_t.geometry().asMultiPolyline()
+                        for line in geom:
+                            start_point = QgsPointXY(geom[0][0])
+                            end_point = QgsPointXY(geom[-1][-1])
+                            fea_t["X_start"] = start_point[0]
+                            fea_t["X_stop"] = end_point[0]
+                            fea_t["Y_start"] = start_point[1]
+                            fea_t["Y_stop"] = end_point[1]
+                            fea_t["length"] = fea_t.geometry().length()  # ellipsoid; noch nicht herausgefunden, wie man das umstellt (trotz geänderter Projektion)
+                            if ((abs(start_point.azimuth(end_point)) > 45) and (abs(start_point.azimuth(end_point)) < 125)):
+                                fea_t["X_mean"] = median([start_point[1], end_point[1]])
+                            else:
+                                fea_t["X_mean"] = median([start_point[0], end_point[0]])
+                            laye_r.updateFeature(fea_t)
+                    laye_r.commitChanges()
+                    df = pd.DataFrame(fea_t.attributes() for fea_t in laye_r.getFeatures(QgsFeatureRequest()))
+                
+                
                 
                 if self.dlg.accessory.isChecked():
                     uncheckedaccessory=0
@@ -473,7 +532,8 @@ class CruiseTrackExport:
                     noneBt=1 
                 else:
                     noneBt=0
-                        
+                
+                
                 #### #### #### #### if CheckBox 'accessory' active  #### #### #### #### #### #### #### #### #### #### #### ####
                 if self.dlg.accessory.isChecked():
                     
@@ -501,18 +561,18 @@ class CruiseTrackExport:
 
                     #### series for normal profile
                     if self.dlg.normalProfiles.isChecked():
-                        #### flip WE
+                        #### flip along (WE)
                         if self.dlg.checkBox_flipWE.isChecked():
-                            idx_reihe = -1 + np.sort(np.matlib.repmat(np.arange(0, len(laye_r) * 2, 4).tolist(), 1, 4)) + np.matlib.repmat((2, 1, 3, 4), 1, len(np.arange(0, len(laye_r) * 2, 4).tolist()))
+                            idx_reihe = -1 + np.sort(np.matlib.repmat(np.arange(0, len(df) * 2, 4).tolist(), 1, 4)) + np.matlib.repmat((2, 1, 3, 4), 1, len(np.arange(0, len(df) * 2, 4).tolist()))
                         else:
-                            idx_reihe = -1 + np.sort(np.matlib.repmat(np.arange(0, len(laye_r) * 2, 4).tolist(), 1, 4)) + np.matlib.repmat((1, 2, 4, 3), 1, len(np.arange(0, len(laye_r) * 2, 4).tolist()))
+                            idx_reihe = -1 + np.sort(np.matlib.repmat(np.arange(0, len(df) * 2, 4).tolist(), 1, 4)) + np.matlib.repmat((1, 2, 4, 3), 1, len(np.arange(0, len(df) * 2, 4).tolist()))
                         idx_reihe = idx_reihe[0][:]
                         idx_reihe = idx_reihe[0:len(df) * 2]
 
                     #### series for every 2nd line
                     elif self.dlg.every2nd.isChecked():
-                        reihe_hin = np.arange(0, len(laye_r), 2).tolist()
-                        reihe_her = np.arange(1, len(laye_r), 2).tolist()
+                        reihe_hin = np.arange(0, len(df), 2).tolist()
+                        reihe_her = np.arange(1, len(df), 2).tolist()
                         lon_st_hin = np.zeros(len(reihe_hin))
                         lon_sp_hin = np.zeros(len(reihe_hin))
                         lat_st_hin = np.zeros(len(reihe_hin))
@@ -532,16 +592,16 @@ class CruiseTrackExport:
                                 lon_sp_hin[nn] = df.iloc[reihe_hin[nn], 0]
                                 lat_st_hin[nn] = df.iloc[reihe_hin[nn], 3]
                                 lat_sp_hin[nn] = df.iloc[reihe_hin[nn], 2]
-                        testvec = np.zeros(len(laye_r))                     # back
+                        testvec = np.zeros(len(df))                     # back
                         dito = 0
-                        for nn in range(1, len(laye_r)):
+                        for nn in range(1, len(df)):
                             if nn / 2 == np.round(nn / 2):
                                 dito = dito + 3
                             else:
                                 dito = dito + 1
                             testvec[nn] = dito
                         for nn in range(0, len(reihe_her)):
-                            if len(laye_r) - 1 in testvec:
+                            if len(df) - 1 in testvec:
                                 if nn / 2 != np.round(nn / 2):
                                     lon_st_her[nn] = df.iloc[reihe_her[nn], 1]
                                     lon_sp_her[nn] = df.iloc[reihe_her[nn], 0]
@@ -564,7 +624,7 @@ class CruiseTrackExport:
                                     lat_st_her[nn] = df.iloc[reihe_her[nn], 3]
                                     lat_sp_her[nn] = df.iloc[reihe_her[nn], 2]
                         
-                        #### flip WE
+                        #### flip along (ex-WE)
                         if self.dlg.checkBox_flipWE.isChecked():
                             new_lat_st = np.concatenate((lat_sp_hin, lat_sp_her), axis=0)
                             new_lat_sp = np.concatenate((lat_st_hin, lat_st_her), axis=0)
@@ -581,15 +641,15 @@ class CruiseTrackExport:
 
                     #### just turn over one side (e.g. Littorina towing)
                     elif self.dlg.Littorina.isChecked():
-                        lis_t = list(range(0, len(laye_r)));
+                        lis_t = list(range(0, len(df)));
                         odds_idx = lis_t[1::2];
                         evens_idx = lis_t[::2]
-                        vec = np.zeros(len(laye_r))
+                        vec = np.zeros(len(df))
                         vec[odds_idx] = odds_idx
                         vec[evens_idx] = np.add(evens_idx, 2).tolist()
                         vec[1:] = np.add(vec[1:], -1).tolist()
                         vec[0] = vec[0] - 1
-                        if len(laye_r) / 2 != np.round(len(laye_r) / 2):
+                        if len(df) / 2 != np.round(len(df) / 2):
                             vec[len(vec) - 1] = vec[len(vec) - 1] - 1
                         new_lon_st = np.zeros(len(df))
                         new_lon_sp = np.zeros(len(df))
@@ -604,7 +664,7 @@ class CruiseTrackExport:
                         new_lat_st[evens_idx] = df.iloc[vec[evens_idx], 3]
                         new_lat_sp[evens_idx] = df.iloc[vec[evens_idx], 2]
                         
-                        #### flip WE cumbersome and double
+                        #### flip along (ex-WE) cumbersome and double
                         if self.dlg.checkBox_flipWE.isChecked():
                             new_lat_st2 = new_lat_sp
                             new_lat_sp2 = new_lat_st
@@ -624,8 +684,8 @@ class CruiseTrackExport:
                 #### if individual cruise track line should be followed
                 if self.dlg.individualtrackline.isChecked():
                     ind_track = 1
-                    Lon_series = np.zeros([len(laye_r),200])
-                    Lat_series = np.zeros([len(laye_r),200])
+                    Lon_series = np.zeros([len(df),200])
+                    Lat_series = np.zeros([len(df),200])
                     coun_t=0
                     for fea_t in laye_r.getFeatures():
                         geom = fea_t.geometry().constGet()
@@ -649,7 +709,7 @@ class CruiseTrackExport:
                     ind_track = 0
                 
                 
-                #### flip NS
+                #### flip across (ex-NS)
                 if self.dlg.checkBox_flipNS.isChecked():
                     df = df.iloc[::-1]     
                     
@@ -682,9 +742,9 @@ class CruiseTrackExport:
 
                 if uncheckedaccessory==1 or noneBt==1:
                     if ind_track!=1:
-                    #### flip WE for in general no further track manupulation
+                    #### flip along (ex-WE) for in general no further track manupulation
                         if self.dlg.checkBox_flipWE.isChecked():
-                            idx_reihe = -1 + np.sort(np.matlib.repmat(np.arange(0, len(laye_r) * 2, 4).tolist(), 1, 4)) + np.matlib.repmat((2, 1, 4, 3), 1, len(np.arange(0, len(laye_r) * 2, 4).tolist()))
+                            idx_reihe = -1 + np.sort(np.matlib.repmat(np.arange(0, len(df) * 2, 4).tolist(), 1, 4)) + np.matlib.repmat((2, 1, 4, 3), 1, len(np.arange(0, len(df) * 2, 4).tolist()))
                             idx_reihe = idx_reihe[0][:];  # len(idx_reihe) # idx_reihe.tolist()
                             idx_reihe = idx_reihe[0:len(df) * 2]
                             Lon_organised = np.zeros(len(df) * 2)
