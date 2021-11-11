@@ -13,3 +13,6 @@ Example for rtz output file:
 
 
 ![cruisetrack2](https://user-images.githubusercontent.com/59967892/133246422-ea15441c-3b03-4d7c-9496-3808839a075d.png)
+
+
+could test rtz now, worked so far
