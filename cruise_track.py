@@ -351,7 +351,7 @@ class CruiseTrackExport:
                 backslashpositions=[i for i in range(len(filename)) if filename.startswith("/", i)]
                 backslashpositions=backslashpositions[len(backslashpositions)-1]
                 #fname=(filename[backslashpositions+1:]+'_'+datestring)
-                fname=filename[backslashpositions+1:]
+                fname=filename[backslashpositions+1:-4]
                 with open(filename, "a") as f_out:
                     f_out.seek(0)
                     f_out.truncate()
@@ -376,7 +376,7 @@ class CruiseTrackExport:
                 with open(filename, "a") as f_out:
                     sys.stdout = f_out  # change the standard output to the file we created.
                     print( ''.join(str(fprintf_copy(sys.stdout,
-                                    '</waypoints>\n<schedules>\n<schedule id="0" name="Base Calculation"/>\n</schedules>\n</route\n>'
+                                    '</waypoints>\n<schedules>\n<schedule id="0" name="Base Calculation"/>\n</schedules>\n</route>\n'
                                     )) ) )
                 
                 
