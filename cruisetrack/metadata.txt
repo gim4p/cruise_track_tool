@@ -5,15 +5,15 @@
 [general]
 name=Cruise Track Export
 qgisMinimumVersion=3.0
-description=Just shall export waypoints for cruise track.
+description=Export waypoints for cruise track.
 version=0.1
 author=gianna
 email=gimap@mail.de
 
-about=Just shall export waypoints for cruise track. Also should deal with organizing waypoints.
+about=Export waypoints for cruise track. Also deals with organizing waypoints.
 
-tracker=http://bugs
-repository=http://repo
+tracker=https://github.com/gim4p/cruise_track/issues
+repository=https://github.com/gim4p/cruise_track
 # End of mandatory metadata
 
 # Recommended items:
