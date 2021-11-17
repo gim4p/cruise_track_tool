@@ -33,6 +33,6 @@ ln -s cruise_track/cruisetrack/ ~/.local/share/QGIS/QGIS3/profiles/default/pytho
 
 ### rtz output file:
 
-![cruisetrack2](img/rtz-file-screenshot.png)
+![cruisetrack2](img/rtz-file-screenshot.PNG)
 
 
