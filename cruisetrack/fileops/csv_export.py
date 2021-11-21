@@ -7,7 +7,7 @@ import pandas as pd
 from cruisetrack.fileops import fprintf_copy
 
 
-def CSV_export(Lon, Lat, filename):  #### CSV file export
+def csv_export(Lon, Lat, filename):  #### CSV file export
     if np.median(Lon) > 360:  # wants decimal degree
         print('not implemented yet')
         '''
