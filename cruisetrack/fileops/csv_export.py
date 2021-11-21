@@ -1,5 +1,5 @@
+import os.path
 import sys
-from datetime import datetime
 
 import numpy as np
 import pandas as pd
@@ -22,12 +22,7 @@ def csv_export(longitude, latitude, filename: str):
     data_fram_e = pd.DataFrame(data_arra_y)
 
     # make format and export file
-    now = datetime.now()
-    datestring = now.strftime("%d/%m/%Y %H:%M:%S")
-    backslashpositions = [i for i in range(len(filename)) if filename.startswith("/", i)]
-    backslashpositions = backslashpositions[len(backslashpositions) - 1]
-    # fname=(filename[backslashpositions+1:]+'_'+datestring)
-    fname = filename[backslashpositions + 1:]
+    fname = os.path.basename(filename)
     original_stdout = sys.stdout  # Save a reference to the original standard output
     with open(filename, "a") as f_out:
         f_out.seek(0)
