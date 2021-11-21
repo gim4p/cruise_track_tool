@@ -205,6 +205,21 @@ class CruiseTrackExport:
         result = self.dlg.exec_()  # Run the dialog event loop
         if result:  #### #### PyQgis start #### ####
 
+            is_individual_trackline = self.dlg.individualtrackline.isChecked()
+            is_accessory = self.dlg.accessory.isChecked()
+            is_nonebt = self.dlg.noneBt.isChecked()
+            is_normal_profile = self.dlg.normalProfiles.isChecked()
+            flip_we = self.dlg.checkBox_flipWE.isChecked()
+            flip_ns = self.dlg.checkBox_flipNS.isChecked()
+            selected_layer_index = self.dlg.cb_inVector.currentIndex()
+            only_process_2nds = self.dlg.every2nd.isChecked()
+            is_littorina = self.dlg.Littorina.isChecked()
+
+            export_to_rt3 = self.dlg.rt3_button.isChecked()
+            export_to_rtz = self.dlg.rtz_button.isChecked()
+            export_to_csv = self.dlg.cvt_button.isChecked()
+            filename_out = self.dlg.le_outTrack.text()
+
             from statistics import mean, median
             import numpy as np
             import numpy.matlib
@@ -224,7 +239,7 @@ class CruiseTrackExport:
 
             from cruisetrack.fileops.csv_export import csv_export
 
-            selected_layer_index = self.dlg.cb_inVector.currentIndex()   # Identify selected layer by its index
+            # Identify selected layer by its index
             ly_tree_nd = layers[selected_layer_index]
             laye_r = ly_tree_nd.layer() # Gives you the layer you have selected in the Layers Panel
             laye_r.dataProvider().deleteAttributes(list(range(0, len(laye_r.fields().names()))))  # safer and easier to just delete attribute table (change maybe later)
@@ -261,7 +276,7 @@ class CruiseTrackExport:
                 if coun_t==0:
                     #print('just one line')
                     ## just for now double, whole script has still to be organized!
-                    if self.dlg.individualtrackline.isChecked():
+                    if is_individual_trackline:
                         laye_r.startEditing()
                         for fea_t in laye_r.getFeatures():
                             geom = fea_t.geometry().asMultiPolyline()
@@ -327,19 +342,19 @@ class CruiseTrackExport:
 
 
 
-                if self.dlg.accessory.isChecked():
+                if is_accessory:
                     uncheckedaccessory=0
                 else:
                     uncheckedaccessory=1
 
-                if self.dlg.noneBt.isChecked():
+                if is_nonebt:
                     noneBt=1
                 else:
                     noneBt=0
 
 
                 #### #### #### #### if CheckBox 'accessory' active  #### #### #### #### #### #### #### #### #### #### #### ####
-                if self.dlg.accessory.isChecked():
+                if is_accessory:
 
                     if noneBt!=1:
                         #### if chaotic series of coordinates -> organise by X_mean/Y-mean (just sensefull if lines are relatively organised)
@@ -362,11 +377,10 @@ class CruiseTrackExport:
                                 new_lat_sp[nn] = df.iloc[nn, 2]
                         arrays = np.transpose([new_lon_st, new_lon_sp, new_lat_st, new_lat_sp])
                         df = pd.DataFrame(arrays)
-
                     #### series for normal profile
-                    if self.dlg.normalProfiles.isChecked():
+                    if is_normal_profile:
                         #### flip along (WE)
-                        if self.dlg.checkBox_flipWE.isChecked():
+                        if flip_we:
                             idx_reihe = -1 + np.sort(np.matlib.repmat(np.arange(0, len(df) * 2, 4).tolist(), 1, 4)) + np.matlib.repmat((2, 1, 3, 4), 1, len(np.arange(0, len(df) * 2, 4).tolist()))
                         else:
                             idx_reihe = -1 + np.sort(np.matlib.repmat(np.arange(0, len(df) * 2, 4).tolist(), 1, 4)) + np.matlib.repmat((1, 2, 4, 3), 1, len(np.arange(0, len(df) * 2, 4).tolist()))
@@ -374,7 +388,7 @@ class CruiseTrackExport:
                         idx_reihe = idx_reihe[0:len(df) * 2]
 
                     #### series for every 2nd line
-                    elif self.dlg.every2nd.isChecked():
+                    elif only_process_2nds:
                         reihe_hin = np.arange(0, len(df), 2).tolist()
                         reihe_her = np.arange(1, len(df), 2).tolist()
                         lon_st_hin = np.zeros(len(reihe_hin))
@@ -429,7 +443,7 @@ class CruiseTrackExport:
                                     lat_sp_her[nn] = df.iloc[reihe_her[nn], 2]
 
                         #### flip along (ex-WE)
-                        if self.dlg.checkBox_flipWE.isChecked():
+                        if flip_we:
                             new_lat_st = np.concatenate((lat_sp_hin, lat_sp_her), axis=0)
                             new_lat_sp = np.concatenate((lat_st_hin, lat_st_her), axis=0)
                             new_lon_st = np.concatenate((lon_sp_hin, lon_sp_her), axis=0)
@@ -444,7 +458,7 @@ class CruiseTrackExport:
                         df = pd.DataFrame(arrays)
 
                     #### just turn over one side (e.g. Littorina towing)
-                    elif self.dlg.Littorina.isChecked():
+                    elif is_littorina:
                         lis_t = list(range(0, len(df)));
                         odds_idx = lis_t[1::2];
                         evens_idx = lis_t[::2]
@@ -469,7 +483,7 @@ class CruiseTrackExport:
                         new_lat_sp[evens_idx] = df.iloc[vec[evens_idx], 2]
 
                         #### flip along (ex-WE) cumbersome and double
-                        if self.dlg.checkBox_flipWE.isChecked():
+                        if flip_we:
                             new_lat_st2 = new_lat_sp
                             new_lat_sp2 = new_lat_st
                             new_lon_st2 = new_lon_sp
@@ -482,11 +496,8 @@ class CruiseTrackExport:
                         arrays = np.transpose([new_lon_st, new_lon_sp, new_lat_st, new_lat_sp])
                         df = pd.DataFrame(arrays)
 
-                #else:
-                    #print("track not manipulated")
-
-                #### if individual cruise track line should be followed
-                if self.dlg.individualtrackline.isChecked():
+                # if individual cruise track line should be followed
+                if is_individual_trackline:
                     ind_track = 1
                     Lon_series = np.zeros([len(df),200])
                     Lat_series = np.zeros([len(df),200])
@@ -514,12 +525,12 @@ class CruiseTrackExport:
 
 
                 #### flip across (ex-NS)
-                if self.dlg.checkBox_flipNS.isChecked():
+                if flip_ns:
                     df = df.iloc[::-1]
 
 
                 #### #### #### #### make just two culumns Lon and Lat #### #### #### #### #### #### #### #### #### #### #### ####
-                if self.dlg.individualtrackline.isChecked():
+                if is_individual_trackline:
                     Lon = df[0]
                     Lat = df[1]
 
@@ -535,7 +546,7 @@ class CruiseTrackExport:
                     Lat[evens_idx2] = df[3]
 
 
-                if self.dlg.normalProfiles.isChecked():
+                if is_normal_profile:
                     Lon_organised = np.zeros(len(df) * 2)
                     Lat_organised = np.zeros(len(df) * 2)
                     for mm in list(range(0, len(df) * 2)):
@@ -547,7 +558,7 @@ class CruiseTrackExport:
                 if uncheckedaccessory==1 or noneBt==1:
                     if ind_track!=1:
                     #### flip along (ex-WE) for in general no further track manupulation
-                        if self.dlg.checkBox_flipWE.isChecked():
+                        if flip_we:
                             idx_reihe = -1 + np.sort(np.matlib.repmat(np.arange(0, len(df) * 2, 4).tolist(), 1, 4)) + np.matlib.repmat((2, 1, 4, 3), 1, len(np.arange(0, len(df) * 2, 4).tolist()))
                             idx_reihe = idx_reihe[0][:];  # len(idx_reihe) # idx_reihe.tolist()
                             idx_reihe = idx_reihe[0:len(df) * 2]
@@ -603,11 +614,11 @@ class CruiseTrackExport:
 
             ############################################################# export text file for transas
             #############################################################
-            if self.dlg.rt3_button.isChecked():
-                rt3_export(Lon, Lat, filename=self.dlg.le_outTrack.text()) #### RT3 file export
-            elif self.dlg.rtz_button.isChecked():
-                rtz_export(Lon, Lat, filename=self.dlg.le_outTrack.text()) #### RTZ file export
-            elif self.dlg.cvt_button.isChecked():
-                csv_export(Lon, Lat, filename=self.dlg.le_outTrack.text()) #### CSV file export
+            if export_to_rt3:
+                rt3_export(Lon, Lat, filename=filename_out) #### RT3 file export
+            elif export_to_rtz:
+                rtz_export(Lon, Lat, filename=filename_out) #### RTZ file export
+            elif export_to_csv:
+                csv_export(Lon, Lat, filename=filename_out) #### CSV file export
             else:
-                csv_export(Lon, Lat, filename=self.dlg.le_outTrack.text())
+                csv_export(Lon, Lat, filename=filename_out)
