@@ -1,8 +1,13 @@
 import math
 
 
-def utmToLatLng(zone, easting, northing, northernHemisphere=True):  #### copied from Staale (https://stackoverflow.com/users/story/3355)
-    if not northernHemisphere:
+def utm_to_lat_lng(zone, easting, northing, northern_hemisphere=True):
+    """
+    from Staale (https://stackoverflow.com/users/story/3355)
+
+    TODO: check if there is a tested tool for that.
+    """
+    if not northern_hemisphere:
         northing = 10000000 - northing
     a = 6378137
     e = 0.081819191
@@ -32,7 +37,7 @@ def utmToLatLng(zone, easting, northing, northernHemisphere=True):  #### copied 
     _a2 = (lof1 - lof2 + lof3) / math.cos(phi1)
     _a3 = _a2 * 180 / math.pi
     latitude = 180 * (phi1 - fact1 * (fact2 + fact3 + fact4)) / math.pi
-    if not northernHemisphere:
+    if not northern_hemisphere:
         latitude = -latitude
     longitude = ((zone > 0) and (6 * zone - 183.0) or 3.0) - _a3
-    return (latitude, longitude)
+    return latitude, longitude

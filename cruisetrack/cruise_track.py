@@ -205,7 +205,7 @@ class CruiseTrackExport:
         result = self.dlg.exec_()  # Run the dialog event loop
         if result:  #### #### PyQgis start #### ####
 
-            from statistics import mean, median, mode, stdev
+            from statistics import mean, median
             import numpy as np
             import numpy.matlib
             import pandas as pd
@@ -214,26 +214,16 @@ class CruiseTrackExport:
             from PyQt5.QtCore import QVariant
             import matplotlib.pyplot as plt
 
-
-            #### #### #### #### #### #### #### #### #### #### #### #### #### #### #### ####
-            #### #### internal functions #### #### 
-
-
-
-            
-            from cruisetrack.process.utmtolatlng import utmToLatLng
+            from cruisetrack.process.utmtolatlng import utm_to_lat_lng
 
             from cruisetrack.process.tsp_nn import tsp_nn
 
-            from cruisetrack.fileops.rt3_export import RT3_export
+            from cruisetrack.fileops.rt3_export import rt3_export
 
-            from cruisetrack.fileops.rtz_export import RTZ_export
+            from cruisetrack.fileops.rtz_export import rtz_export
                 
-            from cruisetrack.fileops.csv_export import CSV_export
-                
-            #### #### #### #### #### #### #### #### #### #### #### #### #### #### #### ####
-            #### #### starting plugin decisions #### #### 
-            
+            from cruisetrack.fileops.csv_export import csv_export
+
             selectedLayerIndex = self.dlg.cb_inVector.currentIndex()   # Identify selected layer by its index
             ly_tree_nd = layers[selectedLayerIndex]
             laye_r = ly_tree_nd.layer() # Gives you the layer you have selected in the Layers Panel
@@ -613,10 +603,10 @@ class CruiseTrackExport:
             ############################################################# export text file for transas
             #############################################################
             if self.dlg.rt3_button.isChecked():
-                RT3_export(Lon, Lat, filename=self.dlg.le_outTrack.text()) #### RT3 file export
+                rt3_export(Lon, Lat, filename=self.dlg.le_outTrack.text()) #### RT3 file export
             elif self.dlg.rtz_button.isChecked():
-                RTZ_export(Lon, Lat, filename=self.dlg.le_outTrack.text()) #### RTZ file export
+                rtz_export(Lon, Lat, filename=self.dlg.le_outTrack.text()) #### RTZ file export
             elif self.dlg.cvt_button.isChecked():
-                CSV_export(Lon, Lat, filename=self.dlg.le_outTrack.text()) #### CSV file export
+                csv_export(Lon, Lat, filename=self.dlg.le_outTrack.text()) #### CSV file export
             else:
-                CSV_export(Lon, Lat, filename=self.dlg.le_outTrack.text())
+                csv_export(Lon, Lat, filename=self.dlg.le_outTrack.text())
