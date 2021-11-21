@@ -175,7 +175,7 @@ class CruiseTrackExport:
             self.iface.removeToolBarIcon(action)
 
     def select_output_file(self):  # added
-                
+
         filename, _filter = QFileDialog.getSaveFileName(self.dlg, "Select   output file ", "")
         if self.dlg.rt3_button.isChecked():
             filename = filename + '.rt3'
@@ -184,11 +184,11 @@ class CruiseTrackExport:
         elif self.dlg.cvt_button.isChecked():
             filename = filename + '.cvt'
         else:
-            filename = filename + '.cvt'    
-        
+            filename = filename + '.cvt'
+
         #print(filename)
         self.dlg.le_outTrack.setText(filename)
-        
+
     def run(self):
         # Create the dialog with elements (after translation) and keep reference
         # Only create GUI ONCE in callback, so that it will only load when the plugin is started
@@ -221,25 +221,26 @@ class CruiseTrackExport:
             from cruisetrack.fileops.rt3_export import rt3_export
 
             from cruisetrack.fileops.rtz_export import rtz_export
-                
+
             from cruisetrack.fileops.csv_export import csv_export
 
-            selectedLayerIndex = self.dlg.cb_inVector.currentIndex()   # Identify selected layer by its index
-            ly_tree_nd = layers[selectedLayerIndex]
+            selected_layer_index = self.dlg.cb_inVector.currentIndex()   # Identify selected layer by its index
+            ly_tree_nd = layers[selected_layer_index]
             laye_r = ly_tree_nd.layer() # Gives you the layer you have selected in the Layers Panel
             laye_r.dataProvider().deleteAttributes(list(range(0, len(laye_r.fields().names()))))  # safer and easier to just delete attribute table (change maybe later)
             laye_r.updateFields()
             layer_provider = laye_r.dataProvider()
-            
-            #### what input layer
+
+            # what input layer
+            geom_type = None
             for fea_t in laye_r.getFeatures():
                 geom = fea_t.geometry()
                 if geom.type() == QgsWkbTypes.PointGeometry:
-                    Point_MPoint_Line = 0 # Point (distinction to Multipoint still missing)
+                    geom_type = "Point"  # Point (distinction to Multipoint still missing)
                 elif geom.type() == QgsWkbTypes.LineGeometry:
-                    Point_MPoint_Line = 1 # Line
-            
-            if Point_MPoint_Line==1:
+                    geom_type = "Line"  # Line
+
+            if geom_type.lower()=="point":
                 field_name = "X_start"  # if there are the right fields still missing, make them
                 field_index = laye_r.fields().indexFromName(field_name)
                 if field_index == -1:
@@ -249,16 +250,16 @@ class CruiseTrackExport:
                                                   QgsField("X_mean", QVariant.Double)])
                     laye_r.updateFields()
 
-                #### #### put data from shapefile into attribute table
+                # put data from shapefile into attribute table
                 coun_t=-1
                 for fea_t in laye_r.getFeatures():
                     geom = fea_t.geometry()
                     coun_t=coun_t+1
-                    
-                    
-                #### if just one line, with multiple points, but as normal regular profile lines wanted (additinoally accessory tasks)
-                if coun_t==0: 
-                    #print('just one line')           
+
+                """ if just one line, with multiple points, 
+                but as normal regular profile lines wanted (additinoally accessory tasks)"""
+                if coun_t==0:
+                    #print('just one line')
                     ## just for now double, whole script has still to be organized!
                     if self.dlg.individualtrackline.isChecked():
                         laye_r.startEditing()
@@ -280,7 +281,7 @@ class CruiseTrackExport:
                         laye_r.commitChanges()
                         df = pd.DataFrame(fea_t.attributes() for fea_t in laye_r.getFeatures(QgsFeatureRequest()))
                     else:
-                        
+
                         geom = fea_t.geometry().asMultiPolyline()
                         for line in geom:
                             nb_points=len(line)
@@ -290,18 +291,18 @@ class CruiseTrackExport:
                                 temp=line[nn]
                                 pointseries_X[nn]=temp[0]
                                 pointseries_Y[nn]=temp[1]
-                        
+
                         temp1=QgsPoint(pointseries_X[0], pointseries_Y[0])
                         temp2=QgsPoint(pointseries_X[1], pointseries_Y[1])
-                        
+
                         if ((abs(temp1.azimuth(temp2))>45) and (abs(temp1.azimuth(temp2))<125)):
                             arrays = np.transpose( [ pointseries_X[::2],pointseries_X[1::2],pointseries_Y[::2],pointseries_Y[1::2],
                                                     np.mean([ pointseries_Y[::2],pointseries_Y[1::2]],0 ),
                                                     np.mean([ pointseries_Y[::2],pointseries_Y[1::2]],0 ) ] )
-                        else:       
+                        else:
                             arrays = np.transpose( [ pointseries_X[::2],pointseries_X[1::2],pointseries_Y[::2],pointseries_Y[1::2],
                                                     np.mean([ pointseries_Y[::2],pointseries_Y[1::2]],0 ),
-                                                    np.mean([ pointseries_X[::2],pointseries_X[1::2]],0 ) ] )                    
+                                                    np.mean([ pointseries_X[::2],pointseries_X[1::2]],0 ) ] )
                         df = pd.DataFrame(arrays)
                 #### ####
                 else:
@@ -323,23 +324,23 @@ class CruiseTrackExport:
                             laye_r.updateFeature(fea_t)
                     laye_r.commitChanges()
                     df = pd.DataFrame(fea_t.attributes() for fea_t in laye_r.getFeatures(QgsFeatureRequest()))
-                
-                
-                
+
+
+
                 if self.dlg.accessory.isChecked():
                     uncheckedaccessory=0
                 else:
                     uncheckedaccessory=1
-                    
+
                 if self.dlg.noneBt.isChecked():
-                    noneBt=1 
+                    noneBt=1
                 else:
                     noneBt=0
-                
-                
+
+
                 #### #### #### #### if CheckBox 'accessory' active  #### #### #### #### #### #### #### #### #### #### #### ####
                 if self.dlg.accessory.isChecked():
-                    
+
                     if noneBt!=1:
                         #### if chaotic series of coordinates -> organise by X_mean/Y-mean (just sensefull if lines are relatively organised)
                         df = df.sort_values(by=[5])
@@ -426,7 +427,7 @@ class CruiseTrackExport:
                                     lon_sp_her[nn] = df.iloc[reihe_her[nn], 0]
                                     lat_st_her[nn] = df.iloc[reihe_her[nn], 3]
                                     lat_sp_her[nn] = df.iloc[reihe_her[nn], 2]
-                        
+
                         #### flip along (ex-WE)
                         if self.dlg.checkBox_flipWE.isChecked():
                             new_lat_st = np.concatenate((lat_sp_hin, lat_sp_her), axis=0)
@@ -438,7 +439,7 @@ class CruiseTrackExport:
                             new_lat_sp = np.concatenate((lat_sp_hin, lat_sp_her), axis=0)
                             new_lon_st = np.concatenate((lon_st_hin, lon_st_her), axis=0)
                             new_lon_sp = np.concatenate((lon_sp_hin, lon_sp_her), axis=0)
-                            
+
                         arrays = np.transpose([new_lon_st, new_lon_sp, new_lat_st, new_lat_sp])
                         df = pd.DataFrame(arrays)
 
@@ -466,7 +467,7 @@ class CruiseTrackExport:
                         new_lon_sp[evens_idx] = df.iloc[vec[evens_idx], 0]
                         new_lat_st[evens_idx] = df.iloc[vec[evens_idx], 3]
                         new_lat_sp[evens_idx] = df.iloc[vec[evens_idx], 2]
-                        
+
                         #### flip along (ex-WE) cumbersome and double
                         if self.dlg.checkBox_flipWE.isChecked():
                             new_lat_st2 = new_lat_sp
@@ -477,13 +478,13 @@ class CruiseTrackExport:
                             new_lat_sp = new_lat_sp2
                             new_lon_st = new_lon_st2
                             new_lon_sp = new_lon_sp2
-                        
+
                         arrays = np.transpose([new_lon_st, new_lon_sp, new_lat_st, new_lat_sp])
                         df = pd.DataFrame(arrays)
-                        
+
                 #else:
                     #print("track not manipulated")
-                
+
                 #### if individual cruise track line should be followed
                 if self.dlg.individualtrackline.isChecked():
                     ind_track = 1
@@ -504,24 +505,24 @@ class CruiseTrackExport:
                     for n in list(range(coun_t)):
                         Lon = Lon + list(filter(lambda num: num != 0, Lon_series[n]))
                         Lat = Lat + list(filter(lambda num: num != 0, Lat_series[n]))
-                    
+
                     arrays = [Lon, Lat]
                     df = pd.DataFrame(arrays)
                     df = df.T
                 else:
                     ind_track = 0
-                
-                
+
+
                 #### flip across (ex-NS)
                 if self.dlg.checkBox_flipNS.isChecked():
-                    df = df.iloc[::-1]     
-                    
-                        
+                    df = df.iloc[::-1]
+
+
                 #### #### #### #### make just two culumns Lon and Lat #### #### #### #### #### #### #### #### #### #### #### ####
                 if self.dlg.individualtrackline.isChecked():
                     Lon = df[0]
                     Lat = df[1]
-                
+
                 else:
                     lis_t2 = list(range(0, len(df.index) * 2))
                     odds_idx2 = lis_t2[1::2]
@@ -532,8 +533,8 @@ class CruiseTrackExport:
                     Lat = np.zeros(len(df.index) * 2)
                     Lat[odds_idx2] = df[2]
                     Lat[evens_idx2] = df[3]
-                
-                
+
+
                 if self.dlg.normalProfiles.isChecked():
                     Lon_organised = np.zeros(len(df) * 2)
                     Lat_organised = np.zeros(len(df) * 2)
@@ -557,7 +558,7 @@ class CruiseTrackExport:
                                 Lat_organised[mm] = Lat[int(idx_reihe[mm])]
                             Lon = Lon_organised
                             Lat = Lat_organised
-                
+
                 #### #### #### #### plot the track to check the track #### #### #### #### #### #### #### #### #### #### #### ####
                 plt.figure(4)
                 plt.plot(Lon, Lat, label="track")
@@ -566,31 +567,31 @@ class CruiseTrackExport:
                 plt.xlabel('Lon')
                 plt.legend(loc="upper left")
                 plt.show()
-                
-            elif Point_MPoint_Line==0:   #### #### run through stations most efficiently (traveling salesman problem approach)
+
+            elif geom_type.lower()=="line":   #### #### run through stations most efficiently (traveling salesman problem approach)
                 layer_provider.addAttributes([QgsField("X",QVariant.Double),
                 QgsField("Y",QVariant.Double)])
                 laye_r.updateFields()
                 laye_r.startEditing()
-                
+
                 for fea_t in laye_r.getFeatures():
                     geom = fea_t.geometry().asPoint()  # MultiPoint [.geometry().asMultiPoint()] noch extra abdecken
                     fea_t["X"] = geom[0]
                     fea_t["Y"] = geom[1]
                     laye_r.updateFeature(fea_t)
                 laye_r.commitChanges()
-                
+
                 df=pd.DataFrame(fea_t.attributes() for fea_t in laye_r.getFeatures(QgsFeatureRequest()))
 
 
                 station_order=tsp_nn(df)
                 station_order=station_order.tolist()
-                
+
                 Lon = df.iloc[station_order,0]
                 Lon=Lon.values.tolist() # not necessary, but for fprintf easier for now, change later
                 Lat = df.iloc[station_order,1]
                 Lat=Lat.values.tolist()
-                
+
                 #### plot the track to check the track
                 plt.figure(4)
                 plt.plot(Lon,Lat, label="track")
@@ -598,8 +599,8 @@ class CruiseTrackExport:
                 plt.ylabel('Lat'); plt.xlabel('Lon')
                 plt.legend()
                 plt.show()
-            
-            
+
+
             ############################################################# export text file for transas
             #############################################################
             if self.dlg.rt3_button.isChecked():
