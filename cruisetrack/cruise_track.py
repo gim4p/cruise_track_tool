@@ -217,10 +217,8 @@ class CruiseTrackExport:
 
             #### #### #### #### #### #### #### #### #### #### #### #### #### #### #### ####
             #### #### internal functions #### #### 
-            
 
-            
-            
+
 
             
             ''' not implemented yet
@@ -260,7 +258,8 @@ class CruiseTrackExport:
                 longitude = ((zone > 0) and (6 * zone - 183.0) or 3.0) - _a3
                 return (latitude, longitude)
             '''
-            
+            from cruisetrack.process.tsp_nn import tsp_nn
+
             from cruisetrack.fileops.rt3_export import RT3_export
 
             from cruisetrack.fileops.rtz_export import RTZ_export
@@ -627,7 +626,8 @@ class CruiseTrackExport:
                 laye_r.commitChanges()
                 
                 df=pd.DataFrame(fea_t.attributes() for fea_t in laye_r.getFeatures(QgsFeatureRequest()))
-    
+
+
                 station_order=tsp_nn(df)
                 station_order=station_order.tolist()
                 
