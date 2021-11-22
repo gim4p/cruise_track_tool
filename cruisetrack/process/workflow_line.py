@@ -25,16 +25,17 @@ def line_workflow(layer_provider, laye_r):
     station_order = tsp_nn(df)
     station_order = station_order.tolist()
 
-    Lon = df.iloc[station_order, 0]
-    Lon = Lon.values.tolist()  # not necessary, but for fprintf easier for now, change later
-    Lat = df.iloc[station_order, 1]
-    Lat = Lat.values.tolist()
+    lon = df.iloc[station_order, 0]
+    lon = lon.values.tolist()  # not necessary, but for fprintf easier for now, change later
+    lat = df.iloc[station_order, 1]
+    lat = lat.values.tolist()
 
-    #### plot the track to check the track
+    # plot the track to check the track
     plt.figure(4)
-    plt.plot(Lon, Lat, label="track")
-    plt.plot(Lon, Lat, 'r*', label="stations")
+    plt.plot(lon, lat, label="track")
+    plt.plot(lon, lat, 'r*', label="stations")
     plt.ylabel('Lat')
     plt.xlabel('Lon')
     plt.legend()
     plt.show()
+    return lon, lat

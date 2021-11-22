@@ -243,7 +243,7 @@ class CruiseTrackExport:
                 if geom.type() == QgsWkbTypes.PointGeometry:
                     geom_type = "Point"  # Point (distinction to Multipoint still missing)
                 elif geom.type() == QgsWkbTypes.LineGeometry:
-                    geom_type = "Line"  # Line
+                    geom_type = "Point"  # Line
 
             if geom_type.lower()=="point":
                 from .process.workflow_point import point_workflow

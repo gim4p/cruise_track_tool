@@ -42,7 +42,7 @@ def point_workflow(layer_provider, laye_r, is_individual_trackline, is_accessory
                     fea_t["Y_stop"] = end_point[1]
                     # ellipsoid; noch nicht herausgefunden, wie man das umstellt (trotz geänderter Projektion)
                     fea_t["length"] = fea_t.geometry().length()
-                    if ((abs(start_point.azimuth(end_point)) > 45) and (abs(start_point.azimuth(end_point)) < 125)):
+                    if (abs(start_point.azimuth(end_point)) > 45) and (abs(start_point.azimuth(end_point)) < 125):
                         fea_t["X_mean"] = median([start_point[1], end_point[1]])
                     else:
                         fea_t["X_mean"] = median([start_point[0], end_point[0]])
@@ -54,26 +54,26 @@ def point_workflow(layer_provider, laye_r, is_individual_trackline, is_accessory
             geom = fea_t.geometry().asMultiPolyline()
             for line in geom:
                 nb_points = len(line)
-                pointseries_X = np.zeros(nb_points)
-                pointseries_Y = np.zeros(nb_points)
+                pointseries_x = np.zeros(nb_points)
+                pointseries_y = np.zeros(nb_points)
                 for nn in list(range(0, nb_points)):
                     temp = line[nn]
-                    pointseries_X[nn] = temp[0]
-                    pointseries_Y[nn] = temp[1]
+                    pointseries_x[nn] = temp[0]
+                    pointseries_y[nn] = temp[1]
 
-            temp1 = QgsPoint(pointseries_X[0], pointseries_Y[0])
-            temp2 = QgsPoint(pointseries_X[1], pointseries_Y[1])
+            temp1 = QgsPoint(pointseries_x[0], pointseries_y[0])
+            temp2 = QgsPoint(pointseries_x[1], pointseries_y[1])
 
-            if ((abs(temp1.azimuth(temp2)) > 45) and (abs(temp1.azimuth(temp2)) < 125)):
-                arrays = np.transpose([pointseries_X[::2], pointseries_X[1::2], pointseries_Y[::2], pointseries_Y[1::2],
-                                       np.mean([pointseries_Y[::2], pointseries_Y[1::2]], 0),
-                                       np.mean([pointseries_Y[::2], pointseries_Y[1::2]], 0)])
+            if (abs(temp1.azimuth(temp2)) > 45) and (abs(temp1.azimuth(temp2)) < 125):
+                arrays = np.transpose([pointseries_x[::2], pointseries_x[1::2], pointseries_y[::2], pointseries_y[1::2],
+                                       np.mean([pointseries_y[::2], pointseries_y[1::2]], 0),
+                                       np.mean([pointseries_y[::2], pointseries_y[1::2]], 0)])
             else:
-                arrays = np.transpose([pointseries_X[::2], pointseries_X[1::2], pointseries_Y[::2], pointseries_Y[1::2],
-                                       np.mean([pointseries_Y[::2], pointseries_Y[1::2]], 0),
-                                       np.mean([pointseries_X[::2], pointseries_X[1::2]], 0)])
+                arrays = np.transpose([pointseries_x[::2], pointseries_x[1::2], pointseries_y[::2], pointseries_y[1::2],
+                                       np.mean([pointseries_y[::2], pointseries_y[1::2]], 0),
+                                       np.mean([pointseries_x[::2], pointseries_x[1::2]], 0)])
             df = pd.DataFrame(arrays)
-    #### ####
+
     else:
         laye_r.startEditing()
         for fea_t in laye_r.getFeatures():
@@ -85,9 +85,9 @@ def point_workflow(layer_provider, laye_r, is_individual_trackline, is_accessory
                 fea_t["X_stop"] = end_point[0]
                 fea_t["Y_start"] = start_point[1]
                 fea_t["Y_stop"] = end_point[1]
-                fea_t[
-                    "length"] = fea_t.geometry().length()  # ellipsoid; noch nicht herausgefunden, wie man das umstellt (trotz geänderter Projektion)
-                if ((abs(start_point.azimuth(end_point)) > 45) and (abs(start_point.azimuth(end_point)) < 125)):
+                # ellipsoid; noch nicht herausgefunden, wie man das umstellt (trotz geänderter Projektion)
+                fea_t["length"] = fea_t.geometry().length()
+                if (abs(start_point.azimuth(end_point)) > 45) and (abs(start_point.azimuth(end_point)) < 125):
                     fea_t["X_mean"] = median([start_point[1], end_point[1]])
                 else:
                     fea_t["X_mean"] = median([start_point[0], end_point[0]])
@@ -95,23 +95,12 @@ def point_workflow(layer_provider, laye_r, is_individual_trackline, is_accessory
         laye_r.commitChanges()
         df = pd.DataFrame(fea_t.attributes() for fea_t in laye_r.getFeatures(QgsFeatureRequest()))
 
+    # if CheckBox 'accessory' active
     if is_accessory:
-        uncheckedaccessory = 0
-    else:
-        uncheckedaccessory = 1
-
-    if is_nonebt:
-        noneBt = 1
-    else:
-        noneBt = 0
-
-    #### #### #### #### if CheckBox 'accessory' active  #### #### #### #### #### #### #### #### #### #### #### ####
-    if is_accessory:
-
-        if noneBt != 1:
-            #### if chaotic series of coordinates -> organise by X_mean/Y-mean (just sensefull if lines are relatively organised)
+        if not is_nonebt:
+            # if chaotic series of coordinates -> organise by X_mean/Y-mean (just sensefull if lines are relatively organised)
             df = df.sort_values(by=[5])
-            #### alle Linien gleich ausrichten
+            # alle Linien gleich ausrichten
             new_lon_st = np.zeros(len(df))
             new_lon_sp = np.zeros(len(df))
             new_lat_st = np.zeros(len(df))
@@ -129,25 +118,21 @@ def point_workflow(layer_provider, laye_r, is_individual_trackline, is_accessory
                     new_lat_sp[nn] = df.iloc[nn, 2]
             arrays = np.transpose([new_lon_st, new_lon_sp, new_lat_st, new_lat_sp])
             df = pd.DataFrame(arrays)
-        #### series for normal profile
+        # series for normal profile
         if is_normal_profile:
-            #### flip along (WE)
+            # flip along (WE)
             if flip_we:
                 idx_reihe = -1 + np.sort(
-                    np.matlib.repmat(np.arange(0, len(df) * 2, 4).tolist(), 1, 4)) + np.matlib.repmat((2, 1, 3, 4), 1,
-                                                                                                      len(np.arange(0,
-                                                                                                                    len(df) * 2,
-                                                                                                                    4).tolist()))
+                    np.matlib.repmat(np.arange(0, len(df) * 2, 4).tolist(), 1, 4)) +\
+                            np.matlib.repmat((2, 1, 3, 4), 1,len(np.arange(0,len(df) * 2,4).tolist()))
             else:
                 idx_reihe = -1 + np.sort(
-                    np.matlib.repmat(np.arange(0, len(df) * 2, 4).tolist(), 1, 4)) + np.matlib.repmat((1, 2, 4, 3), 1,
-                                                                                                      len(np.arange(0,
-                                                                                                                    len(df) * 2,
-                                                                                                                    4).tolist()))
+                    np.matlib.repmat(np.arange(0, len(df) * 2, 4).tolist(), 1, 4)) +\
+                            np.matlib.repmat((1, 2, 4, 3), 1,len(np.arange(0,len(df) * 2,4).tolist()))
             idx_reihe = idx_reihe[0][:]
             idx_reihe = idx_reihe[0:len(df) * 2]
 
-        #### series for every 2nd line
+        # series for every 2nd line
         elif only_process_2nds:
             reihe_hin = np.arange(0, len(df), 2).tolist()
             reihe_her = np.arange(1, len(df), 2).tolist()
@@ -202,7 +187,7 @@ def point_workflow(layer_provider, laye_r, is_individual_trackline, is_accessory
                         lat_st_her[nn] = df.iloc[reihe_her[nn], 3]
                         lat_sp_her[nn] = df.iloc[reihe_her[nn], 2]
 
-            #### flip along (ex-WE)
+            # flip along (ex-WE)
             if flip_we:
                 new_lat_st = np.concatenate((lat_sp_hin, lat_sp_her), axis=0)
                 new_lat_sp = np.concatenate((lat_st_hin, lat_st_her), axis=0)
@@ -217,7 +202,7 @@ def point_workflow(layer_provider, laye_r, is_individual_trackline, is_accessory
             arrays = np.transpose([new_lon_st, new_lon_sp, new_lat_st, new_lat_sp])
             df = pd.DataFrame(arrays)
 
-        #### just turn over one side (e.g. Littorina towing)
+        # just turn over one side (e.g. Littorina towing)
         elif is_littorina:
             lis_t = list(range(0, len(df)));
             odds_idx = lis_t[1::2];
@@ -242,7 +227,7 @@ def point_workflow(layer_provider, laye_r, is_individual_trackline, is_accessory
             new_lat_st[evens_idx] = df.iloc[vec[evens_idx], 3]
             new_lat_sp[evens_idx] = df.iloc[vec[evens_idx], 2]
 
-            #### flip along (ex-WE) cumbersome and double
+            # flip along (ex-WE) cumbersome and double
             if flip_we:
                 new_lat_st2 = new_lat_sp
                 new_lat_sp2 = new_lat_st
@@ -259,83 +244,82 @@ def point_workflow(layer_provider, laye_r, is_individual_trackline, is_accessory
     # if individual cruise track line should be followed
     if is_individual_trackline:
         ind_track = 1
-        Lon_series = np.zeros([len(df), 200])
-        Lat_series = np.zeros([len(df), 200])
+        lon_series = np.zeros([len(df), 200])
+        lat_series = np.zeros([len(df), 200])
         coun_t = 0
         for fea_t in laye_r.getFeatures():
             geom = fea_t.geometry().constGet()
             for n in list(range(len(geom[0]))):
                 vertices_on_line = QgsPointXY(geom[0][n])
-                Lon_series[coun_t, n] = vertices_on_line[0]
-                Lat_series[coun_t, n] = vertices_on_line[1]
+                lon_series[coun_t, n] = vertices_on_line[0]
+                lat_series[coun_t, n] = vertices_on_line[1]
             coun_t = coun_t + 1
 
-        Lon = []
-        Lat = []
+        lon = []
+        lat = []
 
         for n in list(range(coun_t)):
-            Lon = Lon + list(filter(lambda num: num != 0, Lon_series[n]))
-            Lat = Lat + list(filter(lambda num: num != 0, Lat_series[n]))
+            lon = lon + list(filter(lambda num: num != 0, lon_series[n]))
+            lat = lat + list(filter(lambda num: num != 0, lat_series[n]))
 
-        arrays = [Lon, Lat]
+        arrays = [lon, lat]
         df = pd.DataFrame(arrays)
         df = df.T
     else:
         ind_track = 0
 
-    #### flip across (ex-NS)
+    # flip across (ex-NS)
     if flip_ns:
         df = df.iloc[::-1]
 
-    #### #### #### #### make just two culumns Lon and Lat #### #### #### #### #### #### #### #### #### #### #### ####
+    # make just two culumns Lon and Lat
     if is_individual_trackline:
-        Lon = df[0]
-        Lat = df[1]
+        lon = df[0]
+        lat = df[1]
 
     else:
         lis_t2 = list(range(0, len(df.index) * 2))
         odds_idx2 = lis_t2[1::2]
         evens_idx2 = lis_t2[::2]
-        Lon = np.zeros(len(df.index) * 2)
-        Lon[odds_idx2] = df[0]
-        Lon[evens_idx2] = df[1]
-        Lat = np.zeros(len(df.index) * 2)
-        Lat[odds_idx2] = df[2]
-        Lat[evens_idx2] = df[3]
+        lon = np.zeros(len(df.index) * 2)
+        lon[odds_idx2] = df[0]
+        lon[evens_idx2] = df[1]
+        lat = np.zeros(len(df.index) * 2)
+        lat[odds_idx2] = df[2]
+        lat[evens_idx2] = df[3]
 
     if is_normal_profile:
-        Lon_organised = np.zeros(len(df) * 2)
-        Lat_organised = np.zeros(len(df) * 2)
+        lon_organised = np.zeros(len(df) * 2)
+        lat_organised = np.zeros(len(df) * 2)
         for mm in list(range(0, len(df) * 2)):
-            Lon_organised[mm] = Lon[int(idx_reihe[mm])]
-            Lat_organised[mm] = Lat[int(idx_reihe[mm])]
-        Lon = Lon_organised
-        Lat = Lat_organised
+            lon_organised[mm] = lon[int(idx_reihe[mm])]
+            lat_organised[mm] = lat[int(idx_reihe[mm])]
+        lon = lon_organised
+        lat = lat_organised
 
-    if uncheckedaccessory == 1 or noneBt == 1:
+    if not is_accessory or is_nonebt:
         if ind_track != 1:
-            #### flip along (ex-WE) for in general no further track manupulation
+            # flip along (ex-WE) for in general no further track manupulation
             if flip_we:
                 idx_reihe = -1 + np.sort(
-                    np.matlib.repmat(np.arange(0, len(df) * 2, 4).tolist(), 1, 4)) + np.matlib.repmat((2, 1, 4, 3), 1,
-                                                                                                      len(np.arange(0,
-                                                                                                                    len(df) * 2,
-                                                                                                                    4).tolist()))
-                idx_reihe = idx_reihe[0][:];  # len(idx_reihe) # idx_reihe.tolist()
+                    np.matlib.repmat(np.arange(0, len(df) * 2, 4).tolist(), 1, 4)) + \
+                            np.matlib.repmat((2, 1, 4, 3), 1,len(np.arange(0,len(df) * 2,4).tolist()))
+                idx_reihe = idx_reihe[0][:] # len(idx_reihe) # idx_reihe.tolist()
                 idx_reihe = idx_reihe[0:len(df) * 2]
-                Lon_organised = np.zeros(len(df) * 2)
-                Lat_organised = np.zeros(len(df) * 2)
+                lon_organised = np.zeros(len(df) * 2)
+                lat_organised = np.zeros(len(df) * 2)
                 for mm in range(0, len(df) * 2):
-                    Lon_organised[mm] = Lon[int(idx_reihe[mm])]
-                    Lat_organised[mm] = Lat[int(idx_reihe[mm])]
-                Lon = Lon_organised
-                Lat = Lat_organised
+                    lon_organised[mm] = lon[int(idx_reihe[mm])]
+                    lat_organised[mm] = lat[int(idx_reihe[mm])]
+                lon = lon_organised
+                lat = lat_organised
 
-    #### #### #### #### plot the track to check the track #### #### #### #### #### #### #### #### #### #### #### ####
+    # plot the track to check the track
     plt.figure(4)
-    plt.plot(Lon, Lat, label="track")
-    plt.plot(Lon[0], Lat[0], 'r*', label="start")
+    plt.plot(lon, lat, label="track")
+    plt.plot(lon[0], lat[0], 'r*', label="start")
     plt.ylabel('Lat')
     plt.xlabel('Lon')
     plt.legend(loc="upper left")
     plt.show()
+    return lon, lat
