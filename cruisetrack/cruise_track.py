@@ -203,7 +203,7 @@ class CruiseTrackExport:
 
         self.dlg.show()  # show the dialog
         result = self.dlg.exec_()  # Run the dialog event loop
-        if result:  #PyQgis start
+        if result:  # PyQgis start
 
             is_individual_trackline = self.dlg.individualtrackline.isChecked()
             is_accessory = self.dlg.accessory.isChecked()
@@ -263,13 +263,12 @@ class CruiseTrackExport:
                 from cruisetrack.process.workflow_line import line_workflow
                 lon, lat = line_workflow(layer_provider=layer_provider, laye_r=laye_r)
 
-            ############################################################# export text file for transas
-            #############################################################
+            # export text file for transas
             if export_to_rt3:
-                rt3_export(lon, lat, filename=filename_out)  #### RT3 file export
+                rt3_export(lon, lat, filename=filename_out)  # RT3 file export
             elif export_to_rtz:
-                rtz_export(lon, lat, filename=filename_out)  #### RTZ file export
+                rtz_export(lon, lat, filename=filename_out)  #RTZ file export
             elif export_to_csv:
-                csv_export(lon, lat, filename=filename_out)  #### CSV file export
+                csv_export(lon, lat, filename=filename_out)  # CSV file export
             else:
                 csv_export(lon, lat, filename=filename_out)
