@@ -260,7 +260,7 @@ class CruiseTrackExport:
 
             elif geom_type.lower()=="line":
                 from cruisetrack.process.workflow_line import line_workflow
-                Lon, Lat = line_workflow(layer_provider=None, laye_r=None)
+                Lon, Lat = line_workflow(layer_provider=layer_provider, laye_r=laye_r)
 
 
             ############################################################# export text file for transas
