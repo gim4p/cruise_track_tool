@@ -149,7 +149,7 @@ class CruiseTrackExport:
             self.iface.addToolBarIcon(action)
 
         if add_to_menu:
-            self.iface.addPluginToMenu(self.menu,action)
+            self.iface.addPluginToMenu(self.menu, action)
 
         self.actions.append(action)
 
@@ -186,24 +186,24 @@ class CruiseTrackExport:
         else:
             filename = filename + '.cvt'
 
-        #print(filename)
         self.dlg.le_outTrack.setText(filename)
 
     def run(self):
         # Create the dialog with elements (after translation) and keep reference
         # Only create GUI ONCE in callback, so that it will only load when the plugin is started
-        if self.first_start == True:
+        if self.first_start:
             self.first_start = False
             self.dlg = CruiseTrackExportDialog()
             self.dlg.tb_outTrack.clicked.connect(self.select_output_file)
 
         layers = QgsProject.instance().layerTreeRoot().children()  # Fetch the currently loaded layers
         self.dlg.cb_inVector.clear()  # Clear the contents of the comboBox from previous runs
-        self.dlg.cb_inVector.addItems([layer.name() for layer in layers])  # Populate the comboBox with names of all the loaded layers
+        self.dlg.cb_inVector.addItems(
+            [layer.name() for layer in layers])  # Populate the comboBox with names of all the loaded layers
 
         self.dlg.show()  # show the dialog
         result = self.dlg.exec_()  # Run the dialog event loop
-        if result:  #### #### PyQgis start #### ####
+        if result:  #PyQgis start
 
             is_individual_trackline = self.dlg.individualtrackline.isChecked()
             is_accessory = self.dlg.accessory.isChecked()
@@ -231,8 +231,9 @@ class CruiseTrackExport:
 
             # Identify selected layer by its index
             ly_tree_nd = layers[selected_layer_index]
-            laye_r = ly_tree_nd.layer() # Gives you the layer you have selected in the Layers Panel
-            laye_r.dataProvider().deleteAttributes(list(range(0, len(laye_r.fields().names()))))  # safer and easier to just delete attribute table (change maybe later)
+            laye_r = ly_tree_nd.layer()  # Gives you the layer you have selected in the Layers Panel
+            # safer and easier to just delete attribute table (change maybe later)
+            laye_r.dataProvider().deleteAttributes(list(range(0, len(laye_r.fields().names()))))
             laye_r.updateFields()
             layer_provider = laye_r.dataProvider()
 
@@ -245,31 +246,30 @@ class CruiseTrackExport:
                 elif geom.type() == QgsWkbTypes.LineGeometry:
                     geom_type = "Point"  # Line
 
-            if geom_type.lower()=="point":
+            if geom_type.lower() == "point":
                 from .process.workflow_point import point_workflow
-                Lon, Lat = point_workflow( layer_provider=layer_provider,
-                                           laye_r=laye_r,
-                                           is_individual_trackline=is_individual_trackline,
-                                           is_accessory=is_accessory,
-                                           is_nonebt=is_nonebt,
-                                           is_normal_profile=is_normal_profile,
-                                           flip_we=flip_we,
-                                           only_process_2nds=only_process_2nds,
-                                           is_littorina=is_littorina,
-                                           flip_ns=flip_ns)
+                lon, lat = point_workflow(layer_provider=layer_provider,
+                                          laye_r=laye_r,
+                                          is_individual_trackline=is_individual_trackline,
+                                          is_accessory=is_accessory,
+                                          is_nonebt=is_nonebt,
+                                          is_normal_profile=is_normal_profile,
+                                          flip_we=flip_we,
+                                          only_process_2nds=only_process_2nds,
+                                          is_littorina=is_littorina,
+                                          flip_ns=flip_ns)
 
-            elif geom_type.lower()=="line":
+            elif geom_type.lower() == "line":
                 from cruisetrack.process.workflow_line import line_workflow
-                Lon, Lat = line_workflow(layer_provider=layer_provider, laye_r=laye_r)
-
+                lon, lat = line_workflow(layer_provider=layer_provider, laye_r=laye_r)
 
             ############################################################# export text file for transas
             #############################################################
             if export_to_rt3:
-                rt3_export(Lon, Lat, filename=filename_out) #### RT3 file export
+                rt3_export(lon, lat, filename=filename_out)  #### RT3 file export
             elif export_to_rtz:
-                rtz_export(Lon, Lat, filename=filename_out) #### RTZ file export
+                rtz_export(lon, lat, filename=filename_out)  #### RTZ file export
             elif export_to_csv:
-                csv_export(Lon, Lat, filename=filename_out) #### CSV file export
+                csv_export(lon, lat, filename=filename_out)  #### CSV file export
             else:
-                csv_export(Lon, Lat, filename=filename_out)
+                csv_export(lon, lat, filename=filename_out)
