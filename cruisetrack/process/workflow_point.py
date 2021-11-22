@@ -28,7 +28,7 @@ def point_workflow(layer_provider, laye_r, is_individual_trackline, is_accessory
     but as normal regular profile lines wanted (additinoally accessory tasks)"""
     if coun_t == 0:
         # print('just one line')
-        ## just for now double, whole script has still to be organized!
+        # just for now double, whole script has still to be organized!
         if is_individual_trackline:
             laye_r.startEditing()
             for fea_t in laye_r.getFeatures():
@@ -40,8 +40,8 @@ def point_workflow(layer_provider, laye_r, is_individual_trackline, is_accessory
                     fea_t["X_stop"] = end_point[0]
                     fea_t["Y_start"] = start_point[1]
                     fea_t["Y_stop"] = end_point[1]
-                    fea_t[
-                        "length"] = fea_t.geometry().length()  # ellipsoid; noch nicht herausgefunden, wie man das umstellt (trotz geänderter Projektion)
+                    # ellipsoid; noch nicht herausgefunden, wie man das umstellt (trotz geänderter Projektion)
+                    fea_t["length"] = fea_t.geometry().length()
                     if ((abs(start_point.azimuth(end_point)) > 45) and (abs(start_point.azimuth(end_point)) < 125)):
                         fea_t["X_mean"] = median([start_point[1], end_point[1]])
                     else:

@@ -27,7 +27,6 @@ from qgis.PyQt.QtWidgets import QAction, QFileDialog  # added
 from qgis.core import QgsProject, Qgis  # added
 
 # Initialize Qt resources from file resources.py
-from .process.workflow_point import point_workflow
 from .resources import *
 # Import the code for the dialog
 from .cruise_track_dialog import CruiseTrackExportDialog
@@ -221,13 +220,8 @@ class CruiseTrackExport:
             export_to_csv = self.dlg.cvt_button.isChecked()
             filename_out = self.dlg.le_outTrack.text()
 
-            import pandas as pd
             import os
-            from qgis.core import QgsFeatureRequest, QgsField, QgsWkbTypes
-            from PyQt5.QtCore import QVariant
-            import matplotlib.pyplot as plt
-
-            from cruisetrack.process.tsp_nn import tsp_nn
+            from qgis.core import QgsWkbTypes
 
             from cruisetrack.fileops.rt3_export import rt3_export
 
@@ -252,48 +246,21 @@ class CruiseTrackExport:
                     geom_type = "Line"  # Line
 
             if geom_type.lower()=="point":
-                point_workflow(layer_provider=layer_provider,
-                               laye_r=laye_r,
-                               is_individual_trackline=is_individual_trackline,
-                               is_accessory=is_accessory,
-                               is_nonebt=is_nonebt,
-                               is_normal_profile=is_normal_profile,
-                               flip_we=flip_we,
-                               only_process_2nds=only_process_2nds,
-                               is_littorina=is_littorina,
-                               flip_ns=flip_ns)
+                from .process.workflow_point import point_workflow
+                Lon, Lat = point_workflow( layer_provider=layer_provider,
+                                           laye_r=laye_r,
+                                           is_individual_trackline=is_individual_trackline,
+                                           is_accessory=is_accessory,
+                                           is_nonebt=is_nonebt,
+                                           is_normal_profile=is_normal_profile,
+                                           flip_we=flip_we,
+                                           only_process_2nds=only_process_2nds,
+                                           is_littorina=is_littorina,
+                                           flip_ns=flip_ns)
 
-            elif geom_type.lower()=="line":   #### #### run through stations most efficiently (traveling salesman problem approach)
-                layer_provider.addAttributes([QgsField("X",QVariant.Double),
-                QgsField("Y",QVariant.Double)])
-                laye_r.updateFields()
-                laye_r.startEditing()
-
-                for fea_t in laye_r.getFeatures():
-                    geom = fea_t.geometry().asPoint()  # MultiPoint [.geometry().asMultiPoint()] noch extra abdecken
-                    fea_t["X"] = geom[0]
-                    fea_t["Y"] = geom[1]
-                    laye_r.updateFeature(fea_t)
-                laye_r.commitChanges()
-
-                df=pd.DataFrame(fea_t.attributes() for fea_t in laye_r.getFeatures(QgsFeatureRequest()))
-
-
-                station_order=tsp_nn(df)
-                station_order=station_order.tolist()
-
-                Lon = df.iloc[station_order,0]
-                Lon=Lon.values.tolist() # not necessary, but for fprintf easier for now, change later
-                Lat = df.iloc[station_order,1]
-                Lat=Lat.values.tolist()
-
-                #### plot the track to check the track
-                plt.figure(4)
-                plt.plot(Lon,Lat, label="track")
-                plt.plot(Lon,Lat,'r*', label="stations")
-                plt.ylabel('Lat'); plt.xlabel('Lon')
-                plt.legend()
-                plt.show()
+            elif geom_type.lower()=="line":
+                from cruisetrack.process.workflow_line import line_workflow
+                Lon, Lat = line_workflow(layer_provider=None, laye_r=None)
 
 
             ############################################################# export text file for transas
