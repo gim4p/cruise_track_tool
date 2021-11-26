@@ -1,3 +1,5 @@
+from typing import Tuple, List
+
 import pandas as pd
 from matplotlib import pyplot as plt
 from qgis.core import QgsVectorLayer
@@ -22,7 +24,7 @@ def point_layer_to_df(laye_r) -> pd.DataFrame:
     return df
 
 
-def calc_lat_lon(df: pd.DataFrame):
+def calc_lat_lon(df: pd.DataFrame) -> Tuple[List, List]:
     station_order = tsp_nn(df)
     station_order = station_order.tolist()
 
