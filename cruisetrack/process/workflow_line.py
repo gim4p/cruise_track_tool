@@ -6,7 +6,7 @@ from qgis.core import QgsField, QgsFeatureRequest
 from cruisetrack.process.tsp_nn import tsp_nn
 
 
-def line_workflow(layer_provider, laye_r):
+def process_points(layer_provider, laye_r):
     """run through stations most efficiently (traveling salesman problem approach)"""
     layer_provider.addAttributes([QgsField("X", QVariant.Double),
                                   QgsField("Y", QVariant.Double)])

@@ -7,8 +7,8 @@ from matplotlib import pyplot as plt
 from qgis.core import QgsField, QgsPointXY, QgsFeatureRequest, QgsPoint
 
 
-def point_workflow(layer_provider, laye_r, is_individual_trackline, is_accessory, is_nonebt,
-                   is_normal_profile, flip_we, only_process_2nds, is_littorina, flip_ns):
+def process_lines(layer_provider, laye_r, is_individual_trackline, is_accessory, is_nonebt,
+                  is_normal_profile, flip_we, only_process_2nds, is_littorina, flip_ns):
     field_name = "X_start"  # if there are the right fields still missing, make them
     field_index = laye_r.fields().indexFromName(field_name)
     if field_index == -1:

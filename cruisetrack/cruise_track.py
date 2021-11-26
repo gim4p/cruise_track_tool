@@ -24,7 +24,7 @@
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction, QFileDialog  # added
-from qgis.core import QgsProject, Qgis  # added
+from qgis.core import QgsProject  # added
 
 # Initialize Qt resources from file resources.py
 from .resources import *
@@ -244,30 +244,30 @@ class CruiseTrackExport:
                 if geom.type() == QgsWkbTypes.PointGeometry:
                     geom_type = "Point"  # Point (distinction to Multipoint still missing)
                 elif geom.type() == QgsWkbTypes.LineGeometry:
-                    geom_type = "Point"  # Line
+                    geom_type = "Line"  # Line
 
-            if geom_type.lower() == "point":
-                from .process.workflow_point import point_workflow
-                lon, lat = point_workflow(layer_provider=layer_provider,
-                                          laye_r=laye_r,
-                                          is_individual_trackline=is_individual_trackline,
-                                          is_accessory=is_accessory,
-                                          is_nonebt=is_nonebt,
-                                          is_normal_profile=is_normal_profile,
-                                          flip_we=flip_we,
-                                          only_process_2nds=only_process_2nds,
-                                          is_littorina=is_littorina,
-                                          flip_ns=flip_ns)
+            if QgsWkbTypes.LineGeometry:
+                from .process.workflow_point import process_lines
+                lon, lat = process_lines(layer_provider=layer_provider,
+                                         laye_r=laye_r,
+                                         is_individual_trackline=is_individual_trackline,
+                                         is_accessory=is_accessory,
+                                         is_nonebt=is_nonebt,
+                                         is_normal_profile=is_normal_profile,
+                                         flip_we=flip_we,
+                                         only_process_2nds=only_process_2nds,
+                                         is_littorina=is_littorina,
+                                         flip_ns=flip_ns)
 
-            elif geom_type.lower() == "line":
-                from cruisetrack.process.workflow_line import line_workflow
-                lon, lat = line_workflow(layer_provider=layer_provider, laye_r=laye_r)
+            elif QgsWkbTypes.PointGeometry:
+                from cruisetrack.process.workflow_line import process_points
+                lon, lat = process_points(layer_provider=layer_provider, laye_r=laye_r)
 
             # export text file for transas
             if export_to_rt3:
                 rt3_export(lon, lat, filename=filename_out)  # RT3 file export
             elif export_to_rtz:
-                rtz_export(lon, lat, filename=filename_out)  #RTZ file export
+                rtz_export(lon, lat, filename=filename_out)  # RTZ file export
             elif export_to_csv:
                 csv_export(lon, lat, filename=filename_out)  # CSV file export
             else:
