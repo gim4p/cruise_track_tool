@@ -6,7 +6,7 @@ import numpy as np
 from cruisetrack.fileops import fprintf_copy
 
 
-def RTZ_export(Lon,
+def rtz_export(Lon,
                Lat, filename):  #### RTZ file export, copied from Knut Krämer (working group member), translated to python
 
     if np.median(Lon) > 360:  # wants decimal degree, if UTM --> switch

@@ -4,7 +4,7 @@ from datetime import datetime
 from cruisetrack.fileops import fprintf_copy
 
 
-def RT3_export(Lon, Lat, filename):  #### RT3 file export, copied from Marius Becker (working group member), translated to python
+def rt3_export(Lon, Lat, filename):  #### RT3 file export, copied from Marius Becker (working group member), translated to python
 
     original_stdout = sys.stdout  # save a reference to the original standard output
     now = datetime.now()
