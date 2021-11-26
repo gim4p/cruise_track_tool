@@ -256,7 +256,7 @@ class CruiseTrackExport:
 
             elif geom.type() == QgsWkbTypes.PointGeometry:
                 from cruisetrack.process.workflow_points import point_workflow
-                lon, lat = point_workflow(layer_provider=layer_provider, laye_r=laye_r)
+                lon, lat = point_workflow(laye_r=laye_r)
 
             dbfile = open('/home/markus/scripting/cruise_track/tests/data/examplePickle', 'ab')
             pickle.dump({"lon": lon, "lat": lat}, dbfile)
