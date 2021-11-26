@@ -1,27 +1,47 @@
+from typing import Tuple, List
+
 import pandas as pd
-from PyQt5.QtCore import QVariant
 from matplotlib import pyplot as plt
-from qgis.core import QgsField, QgsFeatureRequest
+from qgis.core import QgsVectorLayer
 
 from cruisetrack.process.tsp_nn import tsp_nn
 
 
-def process_points(layer_provider, laye_r):
-    """run through stations most efficiently (traveling salesman problem approach)"""
-    layer_provider.addAttributes([QgsField("X", QVariant.Double),
-                                  QgsField("Y", QVariant.Double)])
-    laye_r.updateFields()
-    laye_r.startEditing()
+def point_workflow(laye_r: QgsVectorLayer) -> Tuple[List, List]:
+    """
+    Point workflow utilizing Traveling Salesman Problem Solver for creating shortest track.
 
-    for fea_t in laye_r.getFeatures():
-        geom = fea_t.geometry().asPoint()  # MultiPoint [.geometry().asMultiPoint()] noch extra abdecken
-        fea_t["X"] = geom[0]
-        fea_t["Y"] = geom[1]
-        laye_r.updateFeature(fea_t)
-    laye_r.commitChanges()
+    :param laye_r: QgsVectorLayer (Point)
+    :return: Tuple of Lat and Lon lists
+    """
+    df = point_layer_to_df(laye_r)
+    lon, lat = calc_lat_lon(df)
+    plot_track(lon, lat)
+    return lon, lat
 
-    df = pd.DataFrame(fea_t.attributes() for fea_t in laye_r.getFeatures(QgsFeatureRequest()))
 
+def point_layer_to_df(laye_r: QgsVectorLayer) -> pd.DataFrame:
+    """
+    Convert QgsVectorLayer to DataFrame
+
+    :param laye_r: QgsVectorLayer (Point)
+    :return: DataFrame containing X, Y coordinates
+    """
+    row_list = []
+    for feat in laye_r.getFeatures():
+        row_list.append({'X': feat.geometry().asPoint().x(),
+                         'Y': feat.geometry().asPoint().y()})
+    df = pd.DataFrame(row_list)
+    return df
+
+
+def calc_lat_lon(df: pd.DataFrame) -> Tuple[List[float], List[float]]:
+    """
+    Create stations based on input point, using Traveling Salesman Problem Solver.
+
+    :param df: DataFrame containing X, Y coordinates
+    :return: Tuple of Lat and Lon lists
+    """
     station_order = tsp_nn(df)
     station_order = station_order.tolist()
 
@@ -29,7 +49,17 @@ def process_points(layer_provider, laye_r):
     lon = lon.values.tolist()  # not necessary, but for fprintf easier for now, change later
     lat = df.iloc[station_order, 1]
     lat = lat.values.tolist()
+    return lon, lat
 
+
+def plot_track(lon: List[float], lat: List[float]):
+    """
+    Quick Matplotlib plot.
+
+    :param lon: List of Floats
+    :param lat: List of Floats
+    :return:
+    """
     # plot the track to check the track
     plt.figure(4)
     plt.plot(lon, lat, label="track")
@@ -38,4 +68,4 @@ def process_points(layer_provider, laye_r):
     plt.xlabel('Lon')
     plt.legend()
     plt.show()
-    return lon, lat
+
