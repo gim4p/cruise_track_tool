@@ -10,22 +10,9 @@ def point_workflow(layer_provider, laye_r):
     """run through stations most efficiently (traveling salesman problem approach)"""
     df = point_layer_to_df(layer_provider, laye_r)
 
-    station_order = tsp_nn(df)
-    station_order = station_order.tolist()
+    lon, lat = calc_lat_lon(df)
 
-    lon = df.iloc[station_order, 0]
-    lon = lon.values.tolist()  # not necessary, but for fprintf easier for now, change later
-    lat = df.iloc[station_order, 1]
-    lat = lat.values.tolist()
-
-    # plot the track to check the track
-    plt.figure(4)
-    plt.plot(lon, lat, label="track")
-    plt.plot(lon, lat, 'r*', label="stations")
-    plt.ylabel('Lat')
-    plt.xlabel('Lon')
-    plt.legend()
-    plt.show()
+    plot_track()
     return lon, lat
 
 
@@ -44,3 +31,27 @@ def point_layer_to_df(layer_provider, laye_r) -> pd.DataFrame:
 
     df = pd.DataFrame(fea_t.attributes() for fea_t in laye_r.getFeatures(QgsFeatureRequest()))
     return df
+
+
+def calc_lat_lon(df: pd.DataFrame):
+    station_order = tsp_nn(df)
+    station_order = station_order.tolist()
+
+    lon = df.iloc[station_order, 0]
+    lon = lon.values.tolist()  # not necessary, but for fprintf easier for now, change later
+    lat = df.iloc[station_order, 1]
+    lat = lat.values.tolist()
+
+    return lon, lat
+
+
+def plot_track(lon, lat):
+    # plot the track to check the track
+    plt.figure(4)
+    plt.plot(lon, lat, label="track")
+    plt.plot(lon, lat, 'r*', label="stations")
+    plt.ylabel('Lat')
+    plt.xlabel('Lon')
+    plt.legend()
+    plt.show()
+
