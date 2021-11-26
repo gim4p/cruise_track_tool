@@ -1,9 +1,14 @@
 import numpy as np
 
 
-def tsp_nn(stations_xy):  #### quickly transferred from matlab function by Joseph Kirk % Email: jdkirk630@gmail.com
+def tsp_nn(stations_xy):
+    """
+    Traveling Salesman problem - nearest neighbor
+
+    transferred from matlab function by Joseph Kirk % Email: jdkirk630@gmail.com
+    """
     stations = list(range(0, np.size(stations_xy,
-                                     0)))  #### simple implementation of traveling salesman problem by nearest neighbour
+                                     0)))
     xv, yv = np.meshgrid(stations, stations)
     dist_mat = np.square(stations_xy.iloc[xv.flatten()].to_numpy() - stations_xy.iloc[
         yv.flatten()].to_numpy())  # attention: tsp nearest neighbour using lat lon (for relative idx in our lat ok)
