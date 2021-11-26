@@ -238,15 +238,10 @@ class CruiseTrackExport:
             layer_provider = laye_r.dataProvider()
 
             # what input layer
-            geom_type = None
             for fea_t in laye_r.getFeatures():
                 geom = fea_t.geometry()
-                if geom.type() == QgsWkbTypes.PointGeometry:
-                    geom_type = "Point"  # Point (distinction to Multipoint still missing)
-                elif geom.type() == QgsWkbTypes.LineGeometry:
-                    geom_type = "Line"  # Line
 
-            if QgsWkbTypes.LineGeometry:
+            if geom.type() == QgsWkbTypes.LineGeometry:
                 from cruisetrack.process.workflow_lines import process_lines
                 lon, lat = process_lines(layer_provider=layer_provider,
                                          laye_r=laye_r,
@@ -259,7 +254,7 @@ class CruiseTrackExport:
                                          is_littorina=is_littorina,
                                          flip_ns=flip_ns)
 
-            elif QgsWkbTypes.PointGeometry:
+            elif geom.type() == QgsWkbTypes.PointGeometry:
                 from cruisetrack.process.workflow_points import process_points
                 lon, lat = process_points(layer_provider=layer_provider, laye_r=laye_r)
 
