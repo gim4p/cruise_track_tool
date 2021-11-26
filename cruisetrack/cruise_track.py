@@ -25,7 +25,7 @@ from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction, QFileDialog  # added
 from qgis.core import QgsProject  # added
-
+import pickle
 # Initialize Qt resources from file resources.py
 from .resources import *
 # Import the code for the dialog
@@ -258,6 +258,10 @@ class CruiseTrackExport:
                 from cruisetrack.process.workflow_points import process_points
                 lon, lat = process_points(layer_provider=layer_provider, laye_r=laye_r)
 
+            dbfile = open('/home/markus/scripting/cruise_track/tests/data/examplePickle', 'ab')
+            pickle.dump({"lon": lon, "lat": lat}, dbfile)
+            dbfile.close()
+            
             # export text file for transas
             if export_to_rt3:
                 rt3_export(lon, lat, filename=filename_out)  # RT3 file export
