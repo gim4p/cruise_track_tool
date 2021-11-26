@@ -1,35 +1,24 @@
 import pandas as pd
-from PyQt5.QtCore import QVariant
 from matplotlib import pyplot as plt
-from qgis.core import QgsField, QgsFeatureRequest
+from qgis.core import QgsVectorLayer
 
 from cruisetrack.process.tsp_nn import tsp_nn
 
 
-def point_workflow(layer_provider, laye_r):
+def point_workflow(laye_r: QgsVectorLayer):
     """run through stations most efficiently (traveling salesman problem approach)"""
-    df = point_layer_to_df(layer_provider, laye_r)
-
+    df = point_layer_to_df(laye_r)
     lon, lat = calc_lat_lon(df)
-
-    plot_track()
+    plot_track(lon, lat)
     return lon, lat
 
 
-def point_layer_to_df(layer_provider, laye_r) -> pd.DataFrame:
-    layer_provider.addAttributes([QgsField("X", QVariant.Double),
-                                  QgsField("Y", QVariant.Double)])
-    laye_r.updateFields()
-    laye_r.startEditing()
-
-    for fea_t in laye_r.getFeatures():
-        geom = fea_t.geometry().asPoint()  # MultiPoint [.geometry().asMultiPoint()] noch extra abdecken
-        fea_t["X"] = geom[0]
-        fea_t["Y"] = geom[1]
-        laye_r.updateFeature(fea_t)
-    laye_r.commitChanges()
-
-    df = pd.DataFrame(fea_t.attributes() for fea_t in laye_r.getFeatures(QgsFeatureRequest()))
+def point_layer_to_df(laye_r) -> pd.DataFrame:
+    row_list = []
+    for feat in laye_r.getFeatures():
+        row_list.append({'X': feat.geometry().asPoint().x(),
+                         'Y': feat.geometry().asPoint().y()})
+    df = pd.DataFrame(row_list)
     return df
 
 
@@ -41,7 +30,6 @@ def calc_lat_lon(df: pd.DataFrame):
     lon = lon.values.tolist()  # not necessary, but for fprintf easier for now, change later
     lat = df.iloc[station_order, 1]
     lat = lat.values.tolist()
-
     return lon, lat
 
 
