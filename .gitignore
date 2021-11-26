@@ -129,3 +129,6 @@ dmypy.json
 .pyre/
 /sphinx/_build/
 /user_conf.json
+*.cvt
+*.rt3
+*.rtz
