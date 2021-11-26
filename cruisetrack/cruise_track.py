@@ -247,7 +247,7 @@ class CruiseTrackExport:
                     geom_type = "Line"  # Line
 
             if QgsWkbTypes.LineGeometry:
-                from .process.workflow_point import process_lines
+                from cruisetrack.process.workflow_lines import process_lines
                 lon, lat = process_lines(layer_provider=layer_provider,
                                          laye_r=laye_r,
                                          is_individual_trackline=is_individual_trackline,
@@ -260,7 +260,7 @@ class CruiseTrackExport:
                                          flip_ns=flip_ns)
 
             elif QgsWkbTypes.PointGeometry:
-                from cruisetrack.process.workflow_line import process_points
+                from cruisetrack.process.workflow_points import process_points
                 lon, lat = process_points(layer_provider=layer_provider, laye_r=laye_r)
 
             # export text file for transas
