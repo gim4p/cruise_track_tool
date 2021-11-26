@@ -4,29 +4,11 @@ import numpy as np
 import pandas as pd
 from PyQt5.QtCore import QVariant
 from matplotlib import pyplot as plt
-from qgis.core import QgsField, QgsPointXY, QgsFeatureRequest, QgsPoint
+from qgis.core import QgsField, QgsPointXY, QgsFeatureRequest, QgsPoint, QgsVectorLayer
 
 
-def process_lines(layer_provider, laye_r, is_individual_trackline, is_accessory, is_nonebt,
-                  is_normal_profile, flip_we, only_process_2nds, is_littorina, flip_ns):
-    field_name = "X_start"  # if there are the right fields still missing, make them
-    field_index = laye_r.fields().indexFromName(field_name)
-    if field_index == -1:
-        layer_provider.addAttributes([QgsField("X_start", QVariant.Double),
-                                      QgsField("X_stop", QVariant.Double), QgsField("Y_start", QVariant.Double),
-                                      QgsField("Y_stop", QVariant.Double), QgsField("length", QVariant.Double),
-                                      QgsField("X_mean", QVariant.Double)])
-        laye_r.updateFields()
-
-    # put data from shapefile into attribute table
-    coun_t = -1
-    for fea_t in laye_r.getFeatures():
-        geom = fea_t.geometry()
-        coun_t = coun_t + 1
-
-    """ if just one line, with multiple points, 
-    but as normal regular profile lines wanted (additinoally accessory tasks)"""
-    if coun_t == 0:
+def layer_to_dataframe(laye_r: QgsVectorLayer, single_line: bool, is_individual_trackline: bool):
+    if single_line:
         # print('just one line')
         # just for now double, whole script has still to be organized!
         if is_individual_trackline:
@@ -50,7 +32,7 @@ def process_lines(layer_provider, laye_r, is_individual_trackline, is_accessory,
             laye_r.commitChanges()
             df = pd.DataFrame(fea_t.attributes() for fea_t in laye_r.getFeatures(QgsFeatureRequest()))
         else:
-
+            fea_t = [f for f in laye_r.getFeatures()][0]
             geom = fea_t.geometry().asMultiPolyline()
             for line in geom:
                 nb_points = len(line)
@@ -73,7 +55,6 @@ def process_lines(layer_provider, laye_r, is_individual_trackline, is_accessory,
                                        np.mean([pointseries_y[::2], pointseries_y[1::2]], 0),
                                        np.mean([pointseries_x[::2], pointseries_x[1::2]], 0)])
             df = pd.DataFrame(arrays)
-
     else:
         laye_r.startEditing()
         for fea_t in laye_r.getFeatures():
@@ -94,7 +75,33 @@ def process_lines(layer_provider, laye_r, is_individual_trackline, is_accessory,
                 laye_r.updateFeature(fea_t)
         laye_r.commitChanges()
         df = pd.DataFrame(fea_t.attributes() for fea_t in laye_r.getFeatures(QgsFeatureRequest()))
+    return df
 
+
+def process_lines(layer_provider, laye_r, is_individual_trackline, is_accessory, is_nonebt,
+                  is_normal_profile, flip_we, only_process_2nds, is_littorina, flip_ns):
+    field_name = "X_start"  # if there are the right fields still missing, make them
+    field_index = laye_r.fields().indexFromName(field_name)
+    if field_index == -1:
+        layer_provider.addAttributes([QgsField("X_start", QVariant.Double),
+                                      QgsField("X_stop", QVariant.Double), QgsField("Y_start", QVariant.Double),
+                                      QgsField("Y_stop", QVariant.Double), QgsField("length", QVariant.Double),
+                                      QgsField("X_mean", QVariant.Double)])
+        laye_r.updateFields()
+
+    # put data from shapefile into attribute table
+    coun_t = -1
+    for fea_t in laye_r.getFeatures():
+        geom = fea_t.geometry()
+        coun_t = coun_t + 1
+
+    """ if just one line, with multiple points, 
+    but as normal regular profile lines wanted (additinoally accessory tasks)"""
+    single_line = True if coun_t == 0 else False
+    df = layer_to_dataframe(laye_r=laye_r,
+                            single_line=single_line,
+                            is_individual_trackline=is_individual_trackline)
+    df.to_csv('/home/markus/scripting/cruise_track/tests/data/line_layer_as_df.csv')
     # if CheckBox 'accessory' active
     if is_accessory:
         if not is_nonebt:
