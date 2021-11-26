@@ -4,7 +4,27 @@ import numpy as np
 import pandas as pd
 from PyQt5.QtCore import QVariant
 from matplotlib import pyplot as plt
-from qgis.core import QgsField, QgsPointXY, QgsFeatureRequest, QgsPoint, QgsVectorLayer
+from qgis.core import QgsField, QgsPointXY, QgsPoint, QgsVectorLayer
+
+
+def line_features_to_df(laye_r) -> pd.DataFrame:
+    row_list = []
+    for fea_t in laye_r.getFeatures():
+        geom = fea_t.geometry()
+        for part in geom.get():  # https://gis.stackexchange.com/a/304805
+            first_vertex = part[0]
+            last_vertex = part[-1]
+        row_list.append({
+            'X_start': first_vertex.x(),
+            'X_stop': last_vertex.x(),
+            'Y_start': first_vertex.y(),
+            'Y_stop': first_vertex.y(),
+            'length': geom.length(),
+            'X_mean': geom.centroid().asPoint().x(),
+            'Y_mean': geom.centroid().asPoint().y(),
+        })
+    df = pd.DataFrame(row_list)
+    return df
 
 
 def layer_to_dataframe(laye_r: QgsVectorLayer, single_line: bool, is_individual_trackline: bool):
@@ -12,25 +32,7 @@ def layer_to_dataframe(laye_r: QgsVectorLayer, single_line: bool, is_individual_
         # print('just one line')
         # just for now double, whole script has still to be organized!
         if is_individual_trackline:
-            laye_r.startEditing()
-            for fea_t in laye_r.getFeatures():
-                geom = fea_t.geometry().asMultiPolyline()
-                for line in geom:
-                    start_point = QgsPointXY(geom[0][0])
-                    end_point = QgsPointXY(geom[-1][-1])
-                    fea_t["X_start"] = start_point[0]
-                    fea_t["X_stop"] = end_point[0]
-                    fea_t["Y_start"] = start_point[1]
-                    fea_t["Y_stop"] = end_point[1]
-                    # ellipsoid; noch nicht herausgefunden, wie man das umstellt (trotz geänderter Projektion)
-                    fea_t["length"] = fea_t.geometry().length()
-                    if (abs(start_point.azimuth(end_point)) > 45) and (abs(start_point.azimuth(end_point)) < 125):
-                        fea_t["X_mean"] = median([start_point[1], end_point[1]])
-                    else:
-                        fea_t["X_mean"] = median([start_point[0], end_point[0]])
-                    laye_r.updateFeature(fea_t)
-            laye_r.commitChanges()
-            df = pd.DataFrame(fea_t.attributes() for fea_t in laye_r.getFeatures(QgsFeatureRequest()))
+            df = line_features_to_df(laye_r)
         else:
             fea_t = [f for f in laye_r.getFeatures()][0]
             geom = fea_t.geometry().asMultiPolyline()
@@ -56,25 +58,7 @@ def layer_to_dataframe(laye_r: QgsVectorLayer, single_line: bool, is_individual_
                                        np.mean([pointseries_x[::2], pointseries_x[1::2]], 0)])
             df = pd.DataFrame(arrays)
     else:
-        laye_r.startEditing()
-        for fea_t in laye_r.getFeatures():
-            geom = fea_t.geometry().asMultiPolyline()
-            for line in geom:
-                start_point = QgsPointXY(geom[0][0])
-                end_point = QgsPointXY(geom[-1][-1])
-                fea_t["X_start"] = start_point[0]
-                fea_t["X_stop"] = end_point[0]
-                fea_t["Y_start"] = start_point[1]
-                fea_t["Y_stop"] = end_point[1]
-                # ellipsoid; noch nicht herausgefunden, wie man das umstellt (trotz geänderter Projektion)
-                fea_t["length"] = fea_t.geometry().length()
-                if (abs(start_point.azimuth(end_point)) > 45) and (abs(start_point.azimuth(end_point)) < 125):
-                    fea_t["X_mean"] = median([start_point[1], end_point[1]])
-                else:
-                    fea_t["X_mean"] = median([start_point[0], end_point[0]])
-                laye_r.updateFeature(fea_t)
-        laye_r.commitChanges()
-        df = pd.DataFrame(fea_t.attributes() for fea_t in laye_r.getFeatures(QgsFeatureRequest()))
+        df = line_features_to_df(laye_r)
     return df
 
 
@@ -90,10 +74,7 @@ def process_lines(layer_provider, laye_r, is_individual_trackline, is_accessory,
         laye_r.updateFields()
 
     # put data from shapefile into attribute table
-    coun_t = -1
-    for fea_t in laye_r.getFeatures():
-        geom = fea_t.geometry()
-        coun_t = coun_t + 1
+    coun_t = laye_r.featureCount()
 
     """ if just one line, with multiple points, 
     but as normal regular profile lines wanted (additinoally accessory tasks)"""
@@ -130,12 +111,12 @@ def process_lines(layer_provider, laye_r, is_individual_trackline, is_accessory,
             # flip along (WE)
             if flip_we:
                 idx_reihe = -1 + np.sort(
-                    np.matlib.repmat(np.arange(0, len(df) * 2, 4).tolist(), 1, 4)) +\
-                            np.matlib.repmat((2, 1, 3, 4), 1,len(np.arange(0,len(df) * 2,4).tolist()))
+                    np.matlib.repmat(np.arange(0, len(df) * 2, 4).tolist(), 1, 4)) + \
+                            np.matlib.repmat((2, 1, 3, 4), 1, len(np.arange(0, len(df) * 2, 4).tolist()))
             else:
                 idx_reihe = -1 + np.sort(
-                    np.matlib.repmat(np.arange(0, len(df) * 2, 4).tolist(), 1, 4)) +\
-                            np.matlib.repmat((1, 2, 4, 3), 1,len(np.arange(0,len(df) * 2,4).tolist()))
+                    np.matlib.repmat(np.arange(0, len(df) * 2, 4).tolist(), 1, 4)) + \
+                            np.matlib.repmat((1, 2, 4, 3), 1, len(np.arange(0, len(df) * 2, 4).tolist()))
             idx_reihe = idx_reihe[0][:]
             idx_reihe = idx_reihe[0:len(df) * 2]
 
@@ -310,8 +291,8 @@ def process_lines(layer_provider, laye_r, is_individual_trackline, is_accessory,
             if flip_we:
                 idx_reihe = -1 + np.sort(
                     np.matlib.repmat(np.arange(0, len(df) * 2, 4).tolist(), 1, 4)) + \
-                            np.matlib.repmat((2, 1, 4, 3), 1,len(np.arange(0,len(df) * 2,4).tolist()))
-                idx_reihe = idx_reihe[0][:] # len(idx_reihe) # idx_reihe.tolist()
+                            np.matlib.repmat((2, 1, 4, 3), 1, len(np.arange(0, len(df) * 2, 4).tolist()))
+                idx_reihe = idx_reihe[0][:]  # len(idx_reihe) # idx_reihe.tolist()
                 idx_reihe = idx_reihe[0:len(df) * 2]
                 lon_organised = np.zeros(len(df) * 2)
                 lat_organised = np.zeros(len(df) * 2)
