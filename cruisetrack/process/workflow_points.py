@@ -6,21 +6,9 @@ from qgis.core import QgsField, QgsFeatureRequest
 from cruisetrack.process.tsp_nn import tsp_nn
 
 
-def process_points(layer_provider, laye_r):
+def point_workflow(layer_provider, laye_r):
     """run through stations most efficiently (traveling salesman problem approach)"""
-    layer_provider.addAttributes([QgsField("X", QVariant.Double),
-                                  QgsField("Y", QVariant.Double)])
-    laye_r.updateFields()
-    laye_r.startEditing()
-
-    for fea_t in laye_r.getFeatures():
-        geom = fea_t.geometry().asPoint()  # MultiPoint [.geometry().asMultiPoint()] noch extra abdecken
-        fea_t["X"] = geom[0]
-        fea_t["Y"] = geom[1]
-        laye_r.updateFeature(fea_t)
-    laye_r.commitChanges()
-
-    df = pd.DataFrame(fea_t.attributes() for fea_t in laye_r.getFeatures(QgsFeatureRequest()))
+    df = point_layer_to_df(layer_provider, laye_r)
 
     station_order = tsp_nn(df)
     station_order = station_order.tolist()
@@ -39,3 +27,20 @@ def process_points(layer_provider, laye_r):
     plt.legend()
     plt.show()
     return lon, lat
+
+
+def point_layer_to_df(layer_provider, laye_r) -> pd.DataFrame:
+    layer_provider.addAttributes([QgsField("X", QVariant.Double),
+                                  QgsField("Y", QVariant.Double)])
+    laye_r.updateFields()
+    laye_r.startEditing()
+
+    for fea_t in laye_r.getFeatures():
+        geom = fea_t.geometry().asPoint()  # MultiPoint [.geometry().asMultiPoint()] noch extra abdecken
+        fea_t["X"] = geom[0]
+        fea_t["Y"] = geom[1]
+        laye_r.updateFeature(fea_t)
+    laye_r.commitChanges()
+
+    df = pd.DataFrame(fea_t.attributes() for fea_t in laye_r.getFeatures(QgsFeatureRequest()))
+    return df
