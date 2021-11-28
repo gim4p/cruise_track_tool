@@ -1,6 +1,7 @@
 from statistics import median
 
 import numpy as np
+import numpy.matlib #gia20211128, for now (to let it work quickly), still not recommended
 import pandas as pd
 from PyQt5.QtCore import QVariant
 from matplotlib import pyplot as plt
