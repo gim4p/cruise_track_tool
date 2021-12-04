@@ -242,17 +242,17 @@ class CruiseTrackExport:
                 geom = fea_t.geometry()
 
             if geom.type() == QgsWkbTypes.LineGeometry:
-                from cruisetrack.process.workflow_lines import process_lines
-                lon, lat = process_lines(layer_provider=layer_provider,
-                                         laye_r=laye_r,
-                                         is_individual_trackline=is_individual_trackline,
-                                         is_accessory=is_accessory,
-                                         is_nonebt=is_nonebt,
-                                         is_normal_profile=is_normal_profile,
-                                         flip_we=flip_we,
-                                         only_process_2nds=only_process_2nds,
-                                         is_littorina=is_littorina,
-                                         flip_ns=flip_ns)
+                from cruisetrack.process.workflow_lines import lines_workflow
+                lon, lat = lines_workflow(layer_provider=layer_provider,
+                                          laye_r=laye_r,
+                                          is_individual_trackline=is_individual_trackline,
+                                          is_accessory=is_accessory,
+                                          is_nonebt=is_nonebt,
+                                          is_normal_profile=is_normal_profile,
+                                          flip_we=flip_we,
+                                          only_process_2nds=only_process_2nds,
+                                          is_littorina=is_littorina,
+                                          flip_ns=flip_ns)
 
             elif geom.type() == QgsWkbTypes.PointGeometry:
                 from cruisetrack.process.workflow_points import point_workflow

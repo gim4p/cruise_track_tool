@@ -6,6 +6,8 @@ from PyQt5.QtCore import QVariant
 from matplotlib import pyplot as plt
 from qgis.core import QgsField, QgsPointXY, QgsPoint, QgsVectorLayer
 
+from cruisetrack.process import plot_track
+
 
 def line_features_to_df(laye_r) -> pd.DataFrame:
     row_list = []
@@ -62,8 +64,8 @@ def layer_to_dataframe(laye_r: QgsVectorLayer, single_line: bool, is_individual_
     return df
 
 
-def process_lines(layer_provider, laye_r, is_individual_trackline, is_accessory, is_nonebt,
-                  is_normal_profile, flip_we, only_process_2nds, is_littorina, flip_ns):
+def lines_workflow(layer_provider, laye_r, is_individual_trackline, is_accessory, is_nonebt,
+                   is_normal_profile, flip_we, only_process_2nds, is_littorina, flip_ns):
     field_name = "X_start"  # if there are the right fields still missing, make them
     field_index = laye_r.fields().indexFromName(field_name)
     if field_index == -1:
@@ -82,7 +84,7 @@ def process_lines(layer_provider, laye_r, is_individual_trackline, is_accessory,
     df = layer_to_dataframe(laye_r=laye_r,
                             single_line=single_line,
                             is_individual_trackline=is_individual_trackline)
-    df.to_csv('/home/markus/scripting/cruise_track/tests/data/line_layer_as_df.csv')
+    df.to_csv('/home/markus/scripting/cruise_track/tests/data/line_layer_as_df.csv', index=False)
     # if CheckBox 'accessory' active
     if is_accessory:
         if not is_nonebt:
@@ -301,13 +303,5 @@ def process_lines(layer_provider, laye_r, is_individual_trackline, is_accessory,
                     lat_organised[mm] = lat[int(idx_reihe[mm])]
                 lon = lon_organised
                 lat = lat_organised
-
-    # plot the track to check the track
-    plt.figure(4)
-    plt.plot(lon, lat, label="track")
-    plt.plot(lon[0], lat[0], 'r*', label="start")
-    plt.ylabel('Lat')
-    plt.xlabel('Lon')
-    plt.legend(loc="upper left")
-    plt.show()
+    plot_track(lon, lat, label='start')
     return lon, lat
