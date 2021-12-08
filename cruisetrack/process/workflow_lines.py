@@ -85,7 +85,7 @@ def layer_to_dataframe(laye_r: QgsVectorLayer, single_line: bool, is_individual_
         arrays = [lon, lat]
         df = pd.DataFrame(arrays)
         df = df.T
-
+    df = df.rename(columns={0: 'x', 1: 'y'})
     return df
 
 
@@ -109,9 +109,17 @@ def lines_workflow(layer_provider, laye_r, is_individual_trackline, is_accessory
     df = layer_to_dataframe(laye_r=laye_r,
                             single_line=single_line,
                             is_individual_trackline=is_individual_trackline)
-    df.to_csv('/home/markus/scripting/cruise_track/tests/data/line_layer_as_df.csv', index=False)
+    # df.to_csv('/home/markus/scripting/cruise_track/tests/data/line_layer_as_df.csv', index=false)
+    # from cruisetrack.helper import pickle_dict
+    # pickle_dict({'is_individual_trackline': is_individual_trackline,
+    #              'is_accessory': is_accessory, 'is_nonebt': is_nonebt,
+    #              'is_normal_profile': is_normal_profile, 'flip_we' : flip_we,
+    #              'only_process_2nds': only_process_2nds, 'is_littorina': is_littorina,
+    #              'flip_ns': flip_ns},
+    #             '/home/markus/scripting/cruise_track/tests/data/line_layer_as_df.pickle')
     lon, lat = process_lines(df, is_individual_trackline, is_accessory, is_nonebt,
                    is_normal_profile, flip_we, only_process_2nds, is_littorina, flip_ns)
+    plot_track(lon, lat, label='start')
     return lon, lat
 
 
@@ -269,8 +277,8 @@ def process_lines(df, is_individual_trackline, is_accessory, is_nonebt,
 
     # make just two culumns Lon and Lat
     if is_individual_trackline:
-        lon = df[0]
-        lat = df[1]
+        lon = df['x']
+        lat = df['y']
 
     else:
         lis_t2 = list(range(0, len(df.index) * 2))
@@ -308,5 +316,4 @@ def process_lines(df, is_individual_trackline, is_accessory, is_nonebt,
                     lat_organised[mm] = lat[int(idx_reihe[mm])]
                 lon = lon_organised
                 lat = lat_organised
-    plot_track(lon, lat, label='start')
     return lon, lat
