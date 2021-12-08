@@ -109,7 +109,7 @@ def lines_workflow(layer_provider, laye_r, is_individual_trackline, is_accessory
     df = layer_to_dataframe(laye_r=laye_r,
                             single_line=single_line,
                             is_individual_trackline=is_individual_trackline)
-    # df.to_csv('/home/markus/scripting/cruise_track/tests/data/line_layer_as_df.csv', index=false)
+    # df.to_csv('/home/markus/scripting/cruise_track/tests/data/line_layer_as_df.csv', index=False)
     # from cruisetrack.helper import pickle_dict
     # pickle_dict({'is_individual_trackline': is_individual_trackline,
     #              'is_accessory': is_accessory, 'is_nonebt': is_nonebt,
@@ -285,11 +285,11 @@ def process_lines(df, is_individual_trackline, is_accessory, is_nonebt,
         odds_idx2 = lis_t2[1::2]
         evens_idx2 = lis_t2[::2]
         lon = np.zeros(len(df.index) * 2)
-        lon[odds_idx2] = df[0]
-        lon[evens_idx2] = df[1]
+        lon[odds_idx2] = df['X_start']
+        lon[evens_idx2] = df['X_stop']
         lat = np.zeros(len(df.index) * 2)
-        lat[odds_idx2] = df[2]
-        lat[evens_idx2] = df[3]
+        lat[odds_idx2] = df['Y_start']
+        lat[evens_idx2] = df['Y_stop']
 
     if is_normal_profile:
         lon_organised = np.zeros(len(df) * 2)
