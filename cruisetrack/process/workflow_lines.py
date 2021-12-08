@@ -61,6 +61,31 @@ def layer_to_dataframe(laye_r: QgsVectorLayer, single_line: bool, is_individual_
             df = pd.DataFrame(arrays)
     else:
         df = line_features_to_df(laye_r)
+
+    # if individual cruise track line should be followed
+    if is_individual_trackline:
+        lon_series = np.zeros([len(df), 200])
+        lat_series = np.zeros([len(df), 200])
+        coun_t = 0
+        for fea_t in laye_r.getFeatures():
+            geom = fea_t.geometry().constGet()
+            for n in list(range(len(geom[0]))):
+                vertices_on_line = QgsPointXY(geom[0][n])
+                lon_series[coun_t, n] = vertices_on_line[0]
+                lat_series[coun_t, n] = vertices_on_line[1]
+            coun_t = coun_t + 1
+
+        lon = []
+        lat = []
+
+        for n in list(range(coun_t)):
+            lon = lon + list(filter(lambda num: num != 0, lon_series[n]))
+            lat = lat + list(filter(lambda num: num != 0, lat_series[n]))
+
+        arrays = [lon, lat]
+        df = pd.DataFrame(arrays)
+        df = df.T
+
     return df
 
 
@@ -85,6 +110,13 @@ def lines_workflow(layer_provider, laye_r, is_individual_trackline, is_accessory
                             single_line=single_line,
                             is_individual_trackline=is_individual_trackline)
     df.to_csv('/home/markus/scripting/cruise_track/tests/data/line_layer_as_df.csv', index=False)
+    lon, lat = process_lines(df, is_individual_trackline, is_accessory, is_nonebt,
+                   is_normal_profile, flip_we, only_process_2nds, is_littorina, flip_ns)
+    return lon, lat
+
+
+def process_lines(df, is_individual_trackline, is_accessory, is_nonebt,
+                   is_normal_profile, flip_we, only_process_2nds, is_littorina, flip_ns):
     # if CheckBox 'accessory' active
     if is_accessory:
         if not is_nonebt:
@@ -231,33 +263,6 @@ def lines_workflow(layer_provider, laye_r, is_individual_trackline, is_accessory
             arrays = np.transpose([new_lon_st, new_lon_sp, new_lat_st, new_lat_sp])
             df = pd.DataFrame(arrays)
 
-    # if individual cruise track line should be followed
-    if is_individual_trackline:
-        ind_track = 1
-        lon_series = np.zeros([len(df), 200])
-        lat_series = np.zeros([len(df), 200])
-        coun_t = 0
-        for fea_t in laye_r.getFeatures():
-            geom = fea_t.geometry().constGet()
-            for n in list(range(len(geom[0]))):
-                vertices_on_line = QgsPointXY(geom[0][n])
-                lon_series[coun_t, n] = vertices_on_line[0]
-                lat_series[coun_t, n] = vertices_on_line[1]
-            coun_t = coun_t + 1
-
-        lon = []
-        lat = []
-
-        for n in list(range(coun_t)):
-            lon = lon + list(filter(lambda num: num != 0, lon_series[n]))
-            lat = lat + list(filter(lambda num: num != 0, lat_series[n]))
-
-        arrays = [lon, lat]
-        df = pd.DataFrame(arrays)
-        df = df.T
-    else:
-        ind_track = 0
-
     # flip across (ex-NS)
     if flip_ns:
         df = df.iloc[::-1]
@@ -288,7 +293,7 @@ def lines_workflow(layer_provider, laye_r, is_individual_trackline, is_accessory
         lat = lat_organised
 
     if not is_accessory or is_nonebt:
-        if ind_track != 1:
+        if not is_individual_trackline:
             # flip along (ex-WE) for in general no further track manupulation
             if flip_we:
                 idx_reihe = -1 + np.sort(
