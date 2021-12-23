@@ -1,9 +1,9 @@
 from typing import Tuple, List
 
 import pandas as pd
-from matplotlib import pyplot as plt
 from qgis.core import QgsVectorLayer
 
+from cruisetrack.process import plot_track
 from cruisetrack.process.tsp_nn import tsp_nn
 
 
@@ -16,7 +16,7 @@ def point_workflow(laye_r: QgsVectorLayer) -> Tuple[List, List]:
     """
     df = point_layer_to_df(laye_r)
     lon, lat = calc_lat_lon(df)
-    plot_track(lon, lat)
+    plot_track(lon, lat, label='stations')
     return lon, lat
 
 
@@ -52,20 +52,5 @@ def calc_lat_lon(df: pd.DataFrame) -> Tuple[List[float], List[float]]:
     return lon, lat
 
 
-def plot_track(lon: List[float], lat: List[float]):
-    """
-    Quick Matplotlib plot.
 
-    :param lon: List of Floats
-    :param lat: List of Floats
-    :return:
-    """
-    # plot the track to check the track
-    plt.figure(4)
-    plt.plot(lon, lat, label="track")
-    plt.plot(lon, lat, 'r*', label="stations")
-    plt.ylabel('Lat')
-    plt.xlabel('Lon')
-    plt.legend()
-    plt.show()
 

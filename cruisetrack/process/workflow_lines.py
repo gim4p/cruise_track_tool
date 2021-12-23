@@ -5,53 +5,39 @@ import numpy.matlib #gia20211128, for now (to let it work quickly), still not re
 import pandas as pd
 from PyQt5.QtCore import QVariant
 from matplotlib import pyplot as plt
-from qgis.core import QgsField, QgsPointXY, QgsFeatureRequest, QgsPoint
+from qgis.core import QgsField, QgsPointXY, QgsPoint, QgsVectorLayer
+
+from cruisetrack.process import plot_track
 
 
-def process_lines(layer_provider, laye_r, is_individual_trackline, is_accessory, is_nonebt,
-                  is_normal_profile, flip_we, only_process_2nds, is_littorina, flip_ns):
-    field_name = "X_start"  # if there are the right fields still missing, make them
-    field_index = laye_r.fields().indexFromName(field_name)
-    if field_index == -1:
-        layer_provider.addAttributes([QgsField("X_start", QVariant.Double),
-                                      QgsField("X_stop", QVariant.Double), QgsField("Y_start", QVariant.Double),
-                                      QgsField("Y_stop", QVariant.Double), QgsField("length", QVariant.Double),
-                                      QgsField("X_mean", QVariant.Double)])
-        laye_r.updateFields()
-
-    # put data from shapefile into attribute table
-    coun_t = -1
+def line_features_to_df(laye_r) -> pd.DataFrame:
+    row_list = []
     for fea_t in laye_r.getFeatures():
         geom = fea_t.geometry()
-        coun_t = coun_t + 1
+        for part in geom.get():  # https://gis.stackexchange.com/a/304805
+            first_vertex = part[0]
+            last_vertex = part[-1]
+        row_list.append({
+            'X_start': first_vertex.x(),
+            'X_stop': last_vertex.x(),
+            'Y_start': first_vertex.y(),
+            'Y_stop': first_vertex.y(),
+            'length': geom.length(),
+            'X_mean': geom.centroid().asPoint().x(),
+            'Y_mean': geom.centroid().asPoint().y(),
+        })
+    df = pd.DataFrame(row_list)
+    return df
 
-    """ if just one line, with multiple points, 
-    but as normal regular profile lines wanted (additinoally accessory tasks)"""
-    if coun_t == 0:
+
+def layer_to_dataframe(laye_r: QgsVectorLayer, single_line: bool, is_individual_trackline: bool):
+    if single_line:
         # print('just one line')
         # just for now double, whole script has still to be organized!
         if is_individual_trackline:
-            laye_r.startEditing()
-            for fea_t in laye_r.getFeatures():
-                geom = fea_t.geometry().asMultiPolyline()
-                for line in geom:
-                    start_point = QgsPointXY(geom[0][0])
-                    end_point = QgsPointXY(geom[-1][-1])
-                    fea_t["X_start"] = start_point[0]
-                    fea_t["X_stop"] = end_point[0]
-                    fea_t["Y_start"] = start_point[1]
-                    fea_t["Y_stop"] = end_point[1]
-                    # ellipsoid; noch nicht herausgefunden, wie man das umstellt (trotz geänderter Projektion)
-                    fea_t["length"] = fea_t.geometry().length()
-                    if (abs(start_point.azimuth(end_point)) > 45) and (abs(start_point.azimuth(end_point)) < 125):
-                        fea_t["X_mean"] = median([start_point[1], end_point[1]])
-                    else:
-                        fea_t["X_mean"] = median([start_point[0], end_point[0]])
-                    laye_r.updateFeature(fea_t)
-            laye_r.commitChanges()
-            df = pd.DataFrame(fea_t.attributes() for fea_t in laye_r.getFeatures(QgsFeatureRequest()))
+            df = line_features_to_df(laye_r)
         else:
-
+            fea_t = [f for f in laye_r.getFeatures()][0]
             geom = fea_t.geometry().asMultiPolyline()
             for line in geom:
                 nb_points = len(line)
@@ -74,28 +60,72 @@ def process_lines(layer_provider, laye_r, is_individual_trackline, is_accessory,
                                        np.mean([pointseries_y[::2], pointseries_y[1::2]], 0),
                                        np.mean([pointseries_x[::2], pointseries_x[1::2]], 0)])
             df = pd.DataFrame(arrays)
-
     else:
-        laye_r.startEditing()
-        for fea_t in laye_r.getFeatures():
-            geom = fea_t.geometry().asMultiPolyline()
-            for line in geom:
-                start_point = QgsPointXY(geom[0][0])
-                end_point = QgsPointXY(geom[-1][-1])
-                fea_t["X_start"] = start_point[0]
-                fea_t["X_stop"] = end_point[0]
-                fea_t["Y_start"] = start_point[1]
-                fea_t["Y_stop"] = end_point[1]
-                # ellipsoid; noch nicht herausgefunden, wie man das umstellt (trotz geänderter Projektion)
-                fea_t["length"] = fea_t.geometry().length()
-                if (abs(start_point.azimuth(end_point)) > 45) and (abs(start_point.azimuth(end_point)) < 125):
-                    fea_t["X_mean"] = median([start_point[1], end_point[1]])
-                else:
-                    fea_t["X_mean"] = median([start_point[0], end_point[0]])
-                laye_r.updateFeature(fea_t)
-        laye_r.commitChanges()
-        df = pd.DataFrame(fea_t.attributes() for fea_t in laye_r.getFeatures(QgsFeatureRequest()))
+        df = line_features_to_df(laye_r)
 
+    # if individual cruise track line should be followed
+    if is_individual_trackline:
+        lon_series = np.zeros([len(df), 200])
+        lat_series = np.zeros([len(df), 200])
+        coun_t = 0
+        for fea_t in laye_r.getFeatures():
+            geom = fea_t.geometry().constGet()
+            for n in list(range(len(geom[0]))):
+                vertices_on_line = QgsPointXY(geom[0][n])
+                lon_series[coun_t, n] = vertices_on_line[0]
+                lat_series[coun_t, n] = vertices_on_line[1]
+            coun_t = coun_t + 1
+
+        lon = []
+        lat = []
+
+        for n in list(range(coun_t)):
+            lon = lon + list(filter(lambda num: num != 0, lon_series[n]))
+            lat = lat + list(filter(lambda num: num != 0, lat_series[n]))
+
+        arrays = [lon, lat]
+        df = pd.DataFrame(arrays)
+        df = df.T
+    df = df.rename(columns={0: 'x', 1: 'y'})
+    return df
+
+
+def lines_workflow(layer_provider, laye_r, is_individual_trackline, is_accessory, is_nonebt,
+                   is_normal_profile, flip_we, only_process_2nds, is_littorina, flip_ns):
+    field_name = "X_start"  # if there are the right fields still missing, make them
+    field_index = laye_r.fields().indexFromName(field_name)
+    if field_index == -1:
+        layer_provider.addAttributes([QgsField("X_start", QVariant.Double),
+                                      QgsField("X_stop", QVariant.Double), QgsField("Y_start", QVariant.Double),
+                                      QgsField("Y_stop", QVariant.Double), QgsField("length", QVariant.Double),
+                                      QgsField("X_mean", QVariant.Double)])
+        laye_r.updateFields()
+
+    # put data from shapefile into attribute table
+    coun_t = laye_r.featureCount()
+
+    """ if just one line, with multiple points, 
+    but as normal regular profile lines wanted (additinoally accessory tasks)"""
+    single_line = True if coun_t == 0 else False
+    df = layer_to_dataframe(laye_r=laye_r,
+                            single_line=single_line,
+                            is_individual_trackline=is_individual_trackline)
+    # df.to_csv('/home/markus/scripting/cruise_track/tests/data/line_layer_as_df.csv', index=False)
+    # from cruisetrack.helper import pickle_dict
+    # pickle_dict({'is_individual_trackline': is_individual_trackline,
+    #              'is_accessory': is_accessory, 'is_nonebt': is_nonebt,
+    #              'is_normal_profile': is_normal_profile, 'flip_we' : flip_we,
+    #              'only_process_2nds': only_process_2nds, 'is_littorina': is_littorina,
+    #              'flip_ns': flip_ns},
+    #             '/home/markus/scripting/cruise_track/tests/data/line_layer_as_df.pickle')
+    lon, lat = process_lines(df, is_individual_trackline, is_accessory, is_nonebt,
+                   is_normal_profile, flip_we, only_process_2nds, is_littorina, flip_ns)
+    plot_track(lon, lat, label='start')
+    return lon, lat
+
+
+def process_lines(df, is_individual_trackline, is_accessory, is_nonebt,
+                   is_normal_profile, flip_we, only_process_2nds, is_littorina, flip_ns):
     # if CheckBox 'accessory' active
     if is_accessory:
         if not is_nonebt:
@@ -124,12 +154,12 @@ def process_lines(layer_provider, laye_r, is_individual_trackline, is_accessory,
             # flip along (WE)
             if flip_we:
                 idx_reihe = -1 + np.sort(
-                    np.matlib.repmat(np.arange(0, len(df) * 2, 4).tolist(), 1, 4)) +\
-                            np.matlib.repmat((2, 1, 3, 4), 1,len(np.arange(0,len(df) * 2,4).tolist()))
+                    np.matlib.repmat(np.arange(0, len(df) * 2, 4).tolist(), 1, 4)) + \
+                            np.matlib.repmat((2, 1, 3, 4), 1, len(np.arange(0, len(df) * 2, 4).tolist()))
             else:
                 idx_reihe = -1 + np.sort(
-                    np.matlib.repmat(np.arange(0, len(df) * 2, 4).tolist(), 1, 4)) +\
-                            np.matlib.repmat((1, 2, 4, 3), 1,len(np.arange(0,len(df) * 2,4).tolist()))
+                    np.matlib.repmat(np.arange(0, len(df) * 2, 4).tolist(), 1, 4)) + \
+                            np.matlib.repmat((1, 2, 4, 3), 1, len(np.arange(0, len(df) * 2, 4).tolist()))
             idx_reihe = idx_reihe[0][:]
             idx_reihe = idx_reihe[0:len(df) * 2]
 
@@ -242,52 +272,25 @@ def process_lines(layer_provider, laye_r, is_individual_trackline, is_accessory,
             arrays = np.transpose([new_lon_st, new_lon_sp, new_lat_st, new_lat_sp])
             df = pd.DataFrame(arrays)
 
-    # if individual cruise track line should be followed
-    if is_individual_trackline:
-        ind_track = 1
-        lon_series = np.zeros([len(df), 200])
-        lat_series = np.zeros([len(df), 200])
-        coun_t = 0
-        for fea_t in laye_r.getFeatures():
-            geom = fea_t.geometry().constGet()
-            for n in list(range(len(geom[0]))):
-                vertices_on_line = QgsPointXY(geom[0][n])
-                lon_series[coun_t, n] = vertices_on_line[0]
-                lat_series[coun_t, n] = vertices_on_line[1]
-            coun_t = coun_t + 1
-
-        lon = []
-        lat = []
-
-        for n in list(range(coun_t)):
-            lon = lon + list(filter(lambda num: num != 0, lon_series[n]))
-            lat = lat + list(filter(lambda num: num != 0, lat_series[n]))
-
-        arrays = [lon, lat]
-        df = pd.DataFrame(arrays)
-        df = df.T
-    else:
-        ind_track = 0
-
     # flip across (ex-NS)
     if flip_ns:
         df = df.iloc[::-1]
 
     # make just two culumns Lon and Lat
     if is_individual_trackline:
-        lon = df[0]
-        lat = df[1]
+        lon = df['x']
+        lat = df['y']
 
     else:
         lis_t2 = list(range(0, len(df.index) * 2))
         odds_idx2 = lis_t2[1::2]
         evens_idx2 = lis_t2[::2]
         lon = np.zeros(len(df.index) * 2)
-        lon[odds_idx2] = df[0]
-        lon[evens_idx2] = df[1]
+        lon[odds_idx2] = df['X_start']
+        lon[evens_idx2] = df['X_stop']
         lat = np.zeros(len(df.index) * 2)
-        lat[odds_idx2] = df[2]
-        lat[evens_idx2] = df[3]
+        lat[odds_idx2] = df['Y_start']
+        lat[evens_idx2] = df['Y_stop']
 
     if is_normal_profile:
         lon_organised = np.zeros(len(df) * 2)
@@ -299,13 +302,13 @@ def process_lines(layer_provider, laye_r, is_individual_trackline, is_accessory,
         lat = lat_organised
 
     if not is_accessory or is_nonebt:
-        if ind_track != 1:
+        if not is_individual_trackline:
             # flip along (ex-WE) for in general no further track manupulation
             if flip_we:
                 idx_reihe = -1 + np.sort(
                     np.matlib.repmat(np.arange(0, len(df) * 2, 4).tolist(), 1, 4)) + \
-                            np.matlib.repmat((2, 1, 4, 3), 1,len(np.arange(0,len(df) * 2,4).tolist()))
-                idx_reihe = idx_reihe[0][:] # len(idx_reihe) # idx_reihe.tolist()
+                            np.matlib.repmat((2, 1, 4, 3), 1, len(np.arange(0, len(df) * 2, 4).tolist()))
+                idx_reihe = idx_reihe[0][:]  # len(idx_reihe) # idx_reihe.tolist()
                 idx_reihe = idx_reihe[0:len(df) * 2]
                 lon_organised = np.zeros(len(df) * 2)
                 lat_organised = np.zeros(len(df) * 2)
@@ -314,13 +317,4 @@ def process_lines(layer_provider, laye_r, is_individual_trackline, is_accessory,
                     lat_organised[mm] = lat[int(idx_reihe[mm])]
                 lon = lon_organised
                 lat = lat_organised
-
-    # plot the track to check the track
-    plt.figure(4)
-    plt.plot(lon, lat, label="track")
-    plt.plot(lon[0], lat[0], 'r*', label="start")
-    plt.ylabel('Lat')
-    plt.xlabel('Lon')
-    plt.legend(loc="upper left")
-    plt.show()
     return lon, lat
