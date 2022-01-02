@@ -117,14 +117,14 @@ def lines_workflow(layer_provider, laye_r, is_individual_trackline, is_accessory
     df = layer_to_dataframe(laye_r=laye_r,
                             single_line=single_line,
                             is_individual_trackline=is_individual_trackline)
-    df.to_csv('/home/markus/scripting/cruise_track/tests/data/parallel_lines_as_df.csv', index=False)
-    from cruisetrack.helper import pickle_dict
-    pickle_dict({'is_individual_trackline': is_individual_trackline,
-                 'is_accessory': is_accessory, 'is_nonebt': is_nonebt,
-                 'is_normal_profile': is_normal_profile, 'flip_we' : flip_we,
-                 'only_process_2nds': only_process_2nds, 'is_littorina': is_littorina,
-                 'flip_ns': flip_ns},
-                '/home/markus/scripting/cruise_track/tests/data/parallel_lines_as_df.pickle')
+    # df.to_csv('/home/markus/scripting/cruise_track/tests/data/normal_profile_as_df.csv', index=False)
+    # from cruisetrack.helper import pickle_dict
+    # pickle_dict({'is_individual_trackline': is_individual_trackline,
+    #              'is_accessory': is_accessory, 'is_nonebt': is_nonebt,
+    #              'is_normal_profile': is_normal_profile, 'flip_we' : flip_we,
+    #              'only_process_2nds': only_process_2nds, 'is_littorina': is_littorina,
+    #              'flip_ns': flip_ns},
+    #             '/home/markus/scripting/cruise_track/tests/data/normal_profile_as_df.pickle')
     lon, lat = process_lines(df, is_individual_trackline, is_accessory, is_nonebt,
                    is_normal_profile, flip_we, only_process_2nds, is_littorina, flip_ns)
     plot_track(lon, lat, label='start')
