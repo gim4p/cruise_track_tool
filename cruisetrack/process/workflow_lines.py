@@ -137,7 +137,8 @@ def process_lines(df, is_individual_trackline, is_accessory, is_nonebt,
     if is_accessory:
         if not is_nonebt:
             # if chaotic series of coordinates -> organise by X_mean/Y-mean (just sensefull if lines are relatively organised)
-            df = df.sort_values(by=[5])
+            sort_by_col = df['sort_by'].mode()[0]
+            df = df.sort_values(by=sort_by_col)
             # alle Linien gleich ausrichten
             new_lon_st = np.zeros(len(df))
             new_lon_sp = np.zeros(len(df))
@@ -155,7 +156,7 @@ def process_lines(df, is_individual_trackline, is_accessory, is_nonebt,
                     new_lat_st[nn] = df.iloc[nn, 3]
                     new_lat_sp[nn] = df.iloc[nn, 2]
             arrays = np.transpose([new_lon_st, new_lon_sp, new_lat_st, new_lat_sp])
-            df = pd.DataFrame(arrays)
+            df = pd.DataFrame(arrays, columns=['X_start', 'X_stop', 'Y_start', 'Y_stop'])
         # series for normal profile
         if is_normal_profile:
             # flip along (WE)
@@ -238,7 +239,7 @@ def process_lines(df, is_individual_trackline, is_accessory, is_nonebt,
                 new_lon_sp = np.concatenate((lon_sp_hin, lon_sp_her), axis=0)
 
             arrays = np.transpose([new_lon_st, new_lon_sp, new_lat_st, new_lat_sp])
-            df = pd.DataFrame(arrays)
+            df = pd.DataFrame(arrays, columns=['X_start', 'X_stop', 'Y_start', 'Y_stop'])
 
         # just turn over one side (e.g. Littorina towing)
         elif is_littorina:
@@ -277,7 +278,7 @@ def process_lines(df, is_individual_trackline, is_accessory, is_nonebt,
                 new_lon_sp = new_lon_sp2
 
             arrays = np.transpose([new_lon_st, new_lon_sp, new_lat_st, new_lat_sp])
-            df = pd.DataFrame(arrays)
+            df = pd.DataFrame(arrays, columns=['X_start', 'X_stop', 'Y_start', 'Y_stop'])
 
     # flip across (ex-NS)
     if flip_ns:

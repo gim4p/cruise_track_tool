@@ -15,7 +15,7 @@ def plot_track(lon: List[float], lat: List[float], label: str = 'stations'):
     # plot the track to check the track
     plt.figure(4)
     plt.plot(lon, lat, label="track")
-    plt.plot(lon, lat, 'r*', label=label)
+    plt.plot(lon[0], lat[0], 'r*', label=label)
     plt.ylabel('Lat')
     plt.xlabel('Lon')
     plt.legend(loc="upper left")
