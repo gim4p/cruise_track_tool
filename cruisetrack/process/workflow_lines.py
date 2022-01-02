@@ -14,17 +14,24 @@ def line_features_to_df(laye_r) -> pd.DataFrame:
     row_list = []
     for fea_t in laye_r.getFeatures():
         geom = fea_t.geometry()
+        verts = []
         for part in geom.get():  # https://gis.stackexchange.com/a/304805
             first_vertex = part[0]
             last_vertex = part[-1]
+            verts.append(first_vertex)
+            verts.append(last_vertex)
+        start_point = verts[0]
+        end_point = verts[-1]
+        azimuth = abs(start_point.azimuth(end_point))
         row_list.append({
-            'X_start': first_vertex.x(),
-            'X_stop': last_vertex.x(),
-            'Y_start': first_vertex.y(),
-            'Y_stop': first_vertex.y(),
+            'X_start': start_point.x(),
+            'X_stop': end_point.x(),
+            'Y_start': start_point.y(),
+            'Y_stop': end_point.y(),
             'length': geom.length(),
             'X_mean': geom.centroid().asPoint().x(),
             'Y_mean': geom.centroid().asPoint().y(),
+            'sort_by':  'Y_mean' if 45 < azimuth < 135 else 'X_mean'
         })
     df = pd.DataFrame(row_list)
     return df
@@ -110,14 +117,14 @@ def lines_workflow(layer_provider, laye_r, is_individual_trackline, is_accessory
     df = layer_to_dataframe(laye_r=laye_r,
                             single_line=single_line,
                             is_individual_trackline=is_individual_trackline)
-    # df.to_csv('/home/markus/scripting/cruise_track/tests/data/line_layer_as_df.csv', index=False)
-    # from cruisetrack.helper import pickle_dict
-    # pickle_dict({'is_individual_trackline': is_individual_trackline,
-    #              'is_accessory': is_accessory, 'is_nonebt': is_nonebt,
-    #              'is_normal_profile': is_normal_profile, 'flip_we' : flip_we,
-    #              'only_process_2nds': only_process_2nds, 'is_littorina': is_littorina,
-    #              'flip_ns': flip_ns},
-    #             '/home/markus/scripting/cruise_track/tests/data/line_layer_as_df.pickle')
+    df.to_csv('/home/markus/scripting/cruise_track/tests/data/parallel_lines_as_df.csv', index=False)
+    from cruisetrack.helper import pickle_dict
+    pickle_dict({'is_individual_trackline': is_individual_trackline,
+                 'is_accessory': is_accessory, 'is_nonebt': is_nonebt,
+                 'is_normal_profile': is_normal_profile, 'flip_we' : flip_we,
+                 'only_process_2nds': only_process_2nds, 'is_littorina': is_littorina,
+                 'flip_ns': flip_ns},
+                '/home/markus/scripting/cruise_track/tests/data/parallel_lines_as_df.pickle')
     lon, lat = process_lines(df, is_individual_trackline, is_accessory, is_nonebt,
                    is_normal_profile, flip_we, only_process_2nds, is_littorina, flip_ns)
     plot_track(lon, lat, label='start')
@@ -130,7 +137,8 @@ def process_lines(df, is_individual_trackline, is_accessory, is_nonebt,
     if is_accessory:
         if not is_nonebt:
             # if chaotic series of coordinates -> organise by X_mean/Y-mean (just sensefull if lines are relatively organised)
-            df = df.sort_values(by=[5])
+            sort_by_col = df['sort_by'].mode()[0]
+            df = df.sort_values(by=sort_by_col)
             # alle Linien gleich ausrichten
             new_lon_st = np.zeros(len(df))
             new_lon_sp = np.zeros(len(df))
@@ -148,7 +156,7 @@ def process_lines(df, is_individual_trackline, is_accessory, is_nonebt,
                     new_lat_st[nn] = df.iloc[nn, 3]
                     new_lat_sp[nn] = df.iloc[nn, 2]
             arrays = np.transpose([new_lon_st, new_lon_sp, new_lat_st, new_lat_sp])
-            df = pd.DataFrame(arrays)
+            df = pd.DataFrame(arrays, columns=['X_start', 'X_stop', 'Y_start', 'Y_stop'])
         # series for normal profile
         if is_normal_profile:
             # flip along (WE)
@@ -231,7 +239,7 @@ def process_lines(df, is_individual_trackline, is_accessory, is_nonebt,
                 new_lon_sp = np.concatenate((lon_sp_hin, lon_sp_her), axis=0)
 
             arrays = np.transpose([new_lon_st, new_lon_sp, new_lat_st, new_lat_sp])
-            df = pd.DataFrame(arrays)
+            df = pd.DataFrame(arrays, columns=['X_start', 'X_stop', 'Y_start', 'Y_stop'])
 
         # just turn over one side (e.g. Littorina towing)
         elif is_littorina:
@@ -270,7 +278,7 @@ def process_lines(df, is_individual_trackline, is_accessory, is_nonebt,
                 new_lon_sp = new_lon_sp2
 
             arrays = np.transpose([new_lon_st, new_lon_sp, new_lat_st, new_lat_sp])
-            df = pd.DataFrame(arrays)
+            df = pd.DataFrame(arrays, columns=['X_start', 'X_stop', 'Y_start', 'Y_stop'])
 
     # flip across (ex-NS)
     if flip_ns:
