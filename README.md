@@ -21,7 +21,9 @@ ln -s cruise_track/cruisetrack/ ~/.local/share/QGIS/QGIS3/profiles/default/pytho
 ```
 
 ### Windows
-
+Download link for zip file for QGIS:
+https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/gim4p/cruise_track/tree/main/cruisetrack
+(DownGit by https://github.com/MinhasKamal)
 
 
 ## Examples
