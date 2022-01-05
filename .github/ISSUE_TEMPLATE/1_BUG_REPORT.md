@@ -8,12 +8,12 @@ assignees: MBennGit
 
 
 ## Expected Behavior
-
+<!-- What did you expect would happen? -->
 
 ## Actual Behavior
+<!-- What did actually happen? -->
 
-
-## Steps to Reproduce the Problem
+## How can the problem be reproduced?
 
   1.
   1.
@@ -27,3 +27,6 @@ assignees: MBennGit
   - Platform:
     - [ ] Windows
     - [ ] Linux
+
+## Anything else?
+<!-- Screenshots, Paint drawings, Log messages -->
