@@ -31,6 +31,7 @@ from .resources import *
 # Import the code for the dialog
 from .cruise_track_dialog import CruiseTrackExportDialog
 import os.path
+import numpy as np
 
 
 class CruiseTrackExport:
@@ -206,7 +207,8 @@ class CruiseTrackExport:
         if result:  # PyQgis start
 
             is_individual_trackline = self.dlg.individualtrackline.isChecked()
-            is_accessory = self.dlg.accessory.isChecked()
+            is_parallel_lines = self.dlg.parallel_lines.isChecked()
+            is_mult_para_lines = self.dlg.mult_para_lines.isChecked()
             is_nonebt = self.dlg.noneBt.isChecked()
             is_normal_profile = self.dlg.normalProfiles.isChecked()
             flip_we = self.dlg.checkBox_flipWE.isChecked()
@@ -232,9 +234,6 @@ class CruiseTrackExport:
             # Identify selected layer by its index
             ly_tree_nd = layers[selected_layer_index]
             laye_r = ly_tree_nd.layer()  # Gives you the layer you have selected in the Layers Panel
-            # safer and easier to just delete attribute table (change maybe later)
-            laye_r.dataProvider().deleteAttributes(list(range(0, len(laye_r.fields().names()))))
-            laye_r.updateFields()
             layer_provider = laye_r.dataProvider()
 
             # what input layer
@@ -246,7 +245,8 @@ class CruiseTrackExport:
                 lon, lat = lines_workflow(layer_provider=layer_provider,
                                           laye_r=laye_r,
                                           is_individual_trackline=is_individual_trackline,
-                                          is_accessory=is_accessory,
+                                          is_parallel_lines=is_parallel_lines,
+                                          is_mult_para_lines=is_mult_para_lines,
                                           is_nonebt=is_nonebt,
                                           is_normal_profile=is_normal_profile,
                                           flip_we=flip_we,
@@ -256,8 +256,8 @@ class CruiseTrackExport:
 
             elif geom.type() == QgsWkbTypes.PointGeometry:
                 from cruisetrack.process.workflow_points import point_workflow
-                lon, lat = point_workflow(laye_r=laye_r)
-            
+                lon, lat = point_workflow(laye_r=laye_r, flip_ns=flip_ns, flip_we=flip_we)
+
             # export text file for transas
             if export_to_rt3:
                 rt3_export(lon, lat, filename=filename_out)  # RT3 file export
