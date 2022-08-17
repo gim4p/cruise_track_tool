@@ -1,5 +1,4 @@
 from statistics import median
-
 import math
 import numpy as np
 import numpy.matlib #gia20211128, for now (to let it work quickly), still not recommended
@@ -121,14 +120,14 @@ def lines_workflow(layer_provider, laye_r, is_individual_trackline, is_parallel_
                             single_line=single_line,
                             is_individual_trackline=is_individual_trackline)
 
-    # df.to_csv('/home/markus/scripting/cruise_track/tests/data/normal_profile_as_df.csv', index=False)
+    # df.to_csv('tests/data/normal_profile_as_df.csv', index=False)
     # from cruisetrack.helper import pickle_dict
     # pickle_dict({'is_individual_trackline': is_individual_trackline,
     #              'is_mult_para_lines': is_mult_para_lines, 'is_nonebt': is_nonebt,
     #              'is_normal_profile': is_normal_profile, 'flip_we' : flip_we,
     #              'only_process_2nds': only_process_2nds, 'is_littorina': is_littorina,
     #              'flip_ns': flip_ns},
-    #             '/home/markus/scripting/cruise_track/tests/data/normal_profile_as_df.pickle')
+    #             'tests/data/normal_profile_as_df.pickle')
 
     lon, lat = process_lines(df, is_individual_trackline, is_parallel_lines, is_mult_para_lines, is_nonebt,
                    is_normal_profile, flip_we, only_process_2nds, is_littorina, flip_ns)
@@ -142,7 +141,6 @@ def process_lines(df, is_individual_trackline, is_parallel_lines, is_mult_para_l
     if is_mult_para_lines:
 
         if not is_nonebt:
-            print(df)
             # if chaotic series of coordinates -> organise by X_mean/Y-mean (just sensefull if lines are relatively organised)
             sort_by_col = df['sort_by'].mode()[0]
             df = df.sort_values(by=sort_by_col)
@@ -317,12 +315,8 @@ def process_lines(df, is_individual_trackline, is_parallel_lines, is_mult_para_l
 
 
             new_array = np.array([[x_str], [x_stp]])
-            X_mean = np.mean(new_array, axis=0)  # pseudo and relative, since we use lat lon, but for sorting ok
-            #X_mean = X_mean.tolist()
             diff_x = np.diff(new_array, axis=0)
             new_array = np.array([[y_str], [y_stp]])
-            Y_mean = np.mean(new_array, axis=0)
-            Y_mean = Y_mean.tolist()
             diff_y = abs(np.diff(new_array, axis=0))
 
             azimuth = np.degrees(np.arctan(diff_y/diff_x))+90
@@ -330,31 +324,20 @@ def process_lines(df, is_individual_trackline, is_parallel_lines, is_mult_para_l
             azimuth = azimuth[0] # maaaan, just no pthon guy...
             azimuth = azimuth[0]
 
-            if azimuth[0] < 135: # and azimuth > 45:
+            if azimuth[0] < 135 and azimuth[0] > 45:
                 sort_by = np.tile('Y_mean', (len(x_str)))
             else:
                 sort_by = np.tile('X_mean', (len(x_str)))
 
-            print(x_str)
-            print(X_mean)
-            #arrays = np.transpose([x_str, x_stp, y_str, y_stp])
-            #arrays = np.array([x_str, x_stp, y_str, y_stp, X_mean])
-            #df = pd.DataFrame(arrays, columns=['X_start', 'X_stop', 'Y_start', 'Y_stop', 'll'])
-            df = pd.DataFrame()
-            df['X_start'] = x_str
-            df['X_stop'] = x_stp
-            df['X_mean'] = (df['X_start'] +  df['X_stop']) / 2
-            df['Y_start'] = y_str
-            df['Y_stop'] = y_stp
-            df['Y_mean'] = (df['Y_start'] +  df['Y_stop']) / 2
-            print(df)
+            arrays = np.transpose([x_str, x_stp, y_str, y_stp])
+            df = pd.DataFrame(arrays, columns=['X_start', 'X_stop', 'Y_start', 'Y_stop'])
+            df['X_mean'] = (df['X_start'] + df['X_stop']) / 2
+            df['Y_mean'] = (df['Y_start'] + df['Y_stop']) / 2
+            df['sort_by'] = sort_by
 
-
-            ''' 
             # if chaotic series of coordinates -> organise by X_mean/Y-mean (just sensefull if lines are relatively organised)
             sort_by_col = df['sort_by'].mode()[0]
             df = df.sort_values(by=sort_by_col)
-            '''
 
             # alle Linien gleich ausrichten
             new_lon_st = np.zeros(len(df))
@@ -377,8 +360,6 @@ def process_lines(df, is_individual_trackline, is_parallel_lines, is_mult_para_l
 
             arrays = np.transpose([new_lon_st, new_lon_sp, new_lat_st, new_lat_sp])
             df = pd.DataFrame(arrays, columns=['X_start', 'X_stop', 'Y_start', 'Y_stop'])
-
-
 
             ##
             if flip_ns:
@@ -484,8 +465,8 @@ def process_lines(df, is_individual_trackline, is_parallel_lines, is_mult_para_l
 
             # just turn over one side (e.g. Littorina towing)
             elif is_littorina:
-                lis_t = list(range(0, len(df)));
-                odds_idx = lis_t[1::2];
+                lis_t = list(range(0, len(df)))
+                odds_idx = lis_t[1::2]
                 evens_idx = lis_t[::2]
                 vec = np.zeros(len(df))
                 vec[odds_idx] = odds_idx
@@ -521,12 +502,13 @@ def process_lines(df, is_individual_trackline, is_parallel_lines, is_mult_para_l
                 arrays = np.transpose([new_lon_st, new_lon_sp, new_lat_st, new_lat_sp])
                 df = pd.DataFrame(arrays, columns=['X_start', 'X_stop', 'Y_start', 'Y_stop'])
 
-
         #############
         #############
 
-
-    else:
+    try:
+        lon
+    except NameError:
+        ## convert df to series of lat and lon
         lis_t2 = list(range(0, len(df.index) * 2))
         odds_idx2 = lis_t2[1::2]
         evens_idx2 = lis_t2[::2]
@@ -537,6 +519,7 @@ def process_lines(df, is_individual_trackline, is_parallel_lines, is_mult_para_l
         lat[odds_idx2] = df['Y_start']
         lat[evens_idx2] = df['Y_stop']
 
+
     if is_normal_profile:
 
         lon_organised = np.zeros(len(df) * 2)
@@ -546,6 +529,7 @@ def process_lines(df, is_individual_trackline, is_parallel_lines, is_mult_para_l
             lat_organised[mm] = lat[int(idx_reihe[mm])]
         lon = lon_organised
         lat = lat_organised
+
 
 
 
