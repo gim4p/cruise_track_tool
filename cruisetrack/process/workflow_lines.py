@@ -120,15 +120,14 @@ def lines_workflow(layer_provider, laye_r, is_individual_trackline, is_parallel_
                             single_line=single_line,
                             is_individual_trackline=is_individual_trackline)
 
-    # df.to_csv('../tests/data/line_layer_as_df_parallel_tracks.csv', index=False)
+    # df.to_csv('tests/data/normal_profile_as_df.csv', index=False)
     # from cruisetrack.helper import pickle_dict
     # pickle_dict({'is_individual_trackline': is_individual_trackline,
-    #              'is_parallel_lines' : is_parallel_lines,
     #              'is_mult_para_lines': is_mult_para_lines, 'is_nonebt': is_nonebt,
     #              'is_normal_profile': is_normal_profile, 'flip_we' : flip_we,
     #              'only_process_2nds': only_process_2nds, 'is_littorina': is_littorina,
     #              'flip_ns': flip_ns},
-    #             '../tests/data/line_layer_as_df_parallel_tracks.pickle')
+    #             'tests/data/normal_profile_as_df.pickle')
 
     lon, lat = process_lines(df, is_individual_trackline, is_parallel_lines, is_mult_para_lines, is_nonebt,
                    is_normal_profile, flip_we, only_process_2nds, is_littorina, flip_ns)
@@ -295,8 +294,6 @@ def process_lines(df, is_individual_trackline, is_parallel_lines, is_mult_para_l
     #############
     #############
     if is_individual_trackline:
-        lon = df['x']
-        lat = df['y']
 
         if not is_parallel_lines or is_nonebt:
             if flip_ns or flip_we:
@@ -305,14 +302,16 @@ def process_lines(df, is_individual_trackline, is_parallel_lines, is_mult_para_l
 
         if is_parallel_lines and not is_nonebt: ## if parallel lines
 
-            lis_t_individual = list(range(0, len(lon) ))
+            lon_t = df['x']
+            lat_t = df['y']
+            lis_t_individual = list(range(0, len(lon_t) ))
             odds_idx = lis_t_individual[1::2]
             evens_idx = lis_t_individual[::2]
 
-            x_str = lon[evens_idx]
-            x_stp = lon[odds_idx]
-            y_str = lat[evens_idx]
-            y_stp = lat[odds_idx]
+            x_str = lon_t[evens_idx]
+            x_stp = lon_t[odds_idx]
+            y_str = lat_t[evens_idx]
+            y_stp = lat_t[odds_idx]
 
 
             new_array = np.array([[x_str], [x_stp]])
@@ -367,17 +366,6 @@ def process_lines(df, is_individual_trackline, is_parallel_lines, is_mult_para_l
                 df = df.iloc[::-1]  # NS
 
 
-            lis_t2 = list(range(0, len(df.index) * 2))
-            odds_idx2 = lis_t2[1::2]
-            evens_idx2 = lis_t2[::2]
-            lon = np.zeros(len(df.index) * 2)
-            lon[odds_idx2] = df['X_start']
-            lon[evens_idx2] = df['X_stop']
-            lat = np.zeros(len(df.index) * 2)
-            lat[odds_idx2] = df['Y_start']
-            lat[evens_idx2] = df['Y_stop']
-
-
             # series for normal profile
             if is_normal_profile:
 
@@ -392,7 +380,6 @@ def process_lines(df, is_individual_trackline, is_parallel_lines, is_mult_para_l
 
                 idx_reihe = idx_reihe[0][:]
                 idx_reihe = idx_reihe[0:len(df) * 2]
-
 
             # series for every 2nd line
             elif only_process_2nds:
@@ -448,6 +435,13 @@ def process_lines(df, is_individual_trackline, is_parallel_lines, is_mult_para_l
                             lon_sp_her[nn] = df.iloc[reihe_her[nn], 0]
                             lat_st_her[nn] = df.iloc[reihe_her[nn], 3]
                             lat_sp_her[nn] = df.iloc[reihe_her[nn], 2]
+
+                plt.figure()
+                plt.plot(lon_st_her,lat_st_her)
+                plt.plot(lon_sp_her, lat_sp_her)
+                plt.plot(lon_st_hin, lat_st_hin)
+                plt.plot(lon_sp_hin, lat_sp_hin)
+                plt.show
 
                 # flip along (ex-WE)
                 if flip_we:
@@ -505,6 +499,7 @@ def process_lines(df, is_individual_trackline, is_parallel_lines, is_mult_para_l
 
         #############
         #############
+
 
     try:
         lon
