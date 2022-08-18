@@ -1,5 +1,6 @@
 from typing import Tuple, List
 
+import numpy as np
 import pandas as pd
 from qgis.core import QgsVectorLayer
 
@@ -7,7 +8,7 @@ from cruisetrack.process import plot_track
 from cruisetrack.process.tsp_nn import tsp_nn
 
 
-def point_workflow(laye_r: QgsVectorLayer) -> Tuple[List, List]:
+def point_workflow(laye_r: QgsVectorLayer, flip_ns, flip_we) -> Tuple[List, List]:
     """
     Point workflow utilizing Traveling Salesman Problem Solver for creating shortest track.
 
@@ -16,7 +17,10 @@ def point_workflow(laye_r: QgsVectorLayer) -> Tuple[List, List]:
     """
     df = point_layer_to_df(laye_r)
     lon, lat = calc_lat_lon(df)
-    plot_track(lon, lat, label='stations')
+    if flip_we or flip_ns:
+        lon=np.flip(lon)
+        lat=np.flip(lat)
+    plot_track(lon, lat)
     return lon, lat
 
 
@@ -49,6 +53,7 @@ def calc_lat_lon(df: pd.DataFrame) -> Tuple[List[float], List[float]]:
     lon = lon.values.tolist()  # not necessary, but for fprintf easier for now, change later
     lat = df.iloc[station_order, 1]
     lat = lat.values.tolist()
+
     return lon, lat
 
 

@@ -24,7 +24,7 @@ def tsp_nn(stations_xy):
         visited = np.zeros(len(stations))
         I = nn
         visited[I] = 1
-        thisRte[1] = I
+        thisRte[0] = I
 
         for mm in list(range(0, len(stations) - 1)):
             dists = dist_mat[I, :]
@@ -42,6 +42,7 @@ def tsp_nn(stations_xy):
         d = d + dist_mat[I, nn]
         pop[nn, :] = thisRte
         optimal_distances_vec[nn] = d
+
 
     optRoute = pop[optimal_distances_vec.argmin()]
     return optRoute
