@@ -436,12 +436,6 @@ def process_lines(df, is_individual_trackline, is_parallel_lines, is_mult_para_l
                             lat_st_her[nn] = df.iloc[reihe_her[nn], 3]
                             lat_sp_her[nn] = df.iloc[reihe_her[nn], 2]
 
-                plt.figure()
-                plt.plot(lon_st_her,lat_st_her)
-                plt.plot(lon_sp_her, lat_sp_her)
-                plt.plot(lon_st_hin, lat_st_hin)
-                plt.plot(lon_sp_hin, lat_sp_hin)
-                plt.show
 
                 # flip along (ex-WE)
                 if flip_we:
