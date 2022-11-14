@@ -299,6 +299,10 @@ def process_lines(df, is_individual_trackline, is_parallel_lines, is_mult_para_l
             if flip_ns or flip_we:
                 lon = df['x'].values[::-1]
                 lat = df['y'].values[::-1]
+            else:
+                lon = df['x']
+                lat = df['y']
+
 
         if is_parallel_lines and not is_nonebt: ## if parallel lines
 
@@ -321,8 +325,7 @@ def process_lines(df, is_individual_trackline, is_parallel_lines, is_mult_para_l
 
             azimuth = np.degrees(np.arctan(diff_y/diff_x))+90
             azimuth = azimuth.tolist()
-            azimuth = azimuth[0] # maaaan, just no pthon guy...
-            azimuth = azimuth[0]
+            azimuth = azimuth[0][0]
 
             if azimuth[0] < 135 and azimuth[0] > 45:
                 sort_by = np.tile('Y_mean', (len(x_str)))

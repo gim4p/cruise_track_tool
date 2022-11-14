@@ -258,6 +258,7 @@ class CruiseTrackExport:
                 from cruisetrack.process.workflow_points import point_workflow
                 lon, lat = point_workflow(laye_r=laye_r, flip_ns=flip_ns, flip_we=flip_we)
 
+
             # export text file for transas
             if export_to_rt3:
                 rt3_export(lon, lat, filename=filename_out)  # RT3 file export
