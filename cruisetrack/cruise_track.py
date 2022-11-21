@@ -8,7 +8,7 @@
                               -------------------
         begin                : 2021-04-01
         git sha              : $Format:%H$
-        copyright            : (C) 2021 by Gianna Persichini
+        copyright            : (C) 2021 by Gianna Persichini and Markus Benninghoff
         email                : gimap@mail.de
  ***************************************************************************/
 
