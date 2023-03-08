@@ -1,6 +1,6 @@
 # cruisetrackexport
 
-QGIS Plugin that helps exporting navigation files for Transas Ecdis. Main part is the simple sorting of waypoints.
+QGIS Plugin that helps exporting navigation files for Transas Ecdis. The order of waypoints can simply be sorted in a preferred way.
 
 Export to the following file formats:
 - rtz
