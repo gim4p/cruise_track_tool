@@ -28,7 +28,7 @@ Download link for zip file for QGIS:
 [download](https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/gim4p/cruise_track/tree/main/cruisetrack)
 ([DownGit](https://minhaskamal.github.io/DownGit/#/home) by [MinhasKamal](https://github.com/MinhasKamal))
 
-Or just use the rezipped cruisetrack in folder cruise_track_tool-main for installation in 'install from ZIP' in the Plugin Installer.
+Or just use the rezipped cruisetrack folder in main folder cruise_track_tool-main for installation in 'install from ZIP' via the Plugin Installer.
 
 #### with symlink
 
