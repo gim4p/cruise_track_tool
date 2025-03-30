@@ -28,6 +28,8 @@ Download link for zip file for QGIS:
 [download](https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/gim4p/cruise_track/tree/main/cruisetrack)
 ([DownGit](https://minhaskamal.github.io/DownGit/#/home) by [MinhasKamal](https://github.com/MinhasKamal))
 
+Or just use the rezipped cruisetrack in folder cruise_track_tool-main for installation in 'install from ZIP' in the Plugin Installer.
+
 #### with symlink
 
 [see instructions here](https://www.howtogeek.com/howto/16226/complete-guide-to-symbolic-links-symlinks-on-windows-or-linux/)
