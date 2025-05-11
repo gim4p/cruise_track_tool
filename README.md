@@ -28,7 +28,7 @@ Download link for zip file for QGIS:
 [download](https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/gim4p/cruise_track/tree/main/cruisetrack)
 ([DownGit](https://minhaskamal.github.io/DownGit/#/home) by [MinhasKamal](https://github.com/MinhasKamal))
 
-Clicking this download link ((https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/gim4p/cruise_track/tree/main/cruisetrack)) recently triggers a warning for viruses or malware. Alternatively, you can download the folders directly. Simply rezip the "cruisetrack" folder which is located in the main folder "cruise_track_tool-main". You can then use this re-zipped folder to install the tool via the "Install from ZIP" option in the Plugin Installer.
+Clicking this download link ((https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/gim4p/cruise_track/tree/main/cruisetrack)) recently triggers a warning for viruses or malware. Alternatively, you can download the folders directly. Simply rezip the "cruise_track" folder which is located in the main folder "cruise_track_tool-main". You can then use this re-zipped folder to install the tool via the "Install from ZIP" option in the Plugin Installer.
 
 #### with symlink
 
@@ -36,7 +36,7 @@ Clicking this download link ((https://minhaskamal.github.io/DownGit/#/home?url=h
 
 ```shell
 git clone https://github.com/gim4p/cruise_track_tool.git
-mklink /J "cruise_track_tool\cruisetrack" "QGIS\QGIS3\profiles\default\python\plugins"
+mklink /J "cruise_track_tool\cruise_track" "QGIS\QGIS3\profiles\default\python\plugins"
 ```
 
 ## Examples
