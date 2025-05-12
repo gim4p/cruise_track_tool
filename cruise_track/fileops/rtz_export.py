@@ -3,7 +3,7 @@ from datetime import datetime
 
 import numpy as np
 
-from cruisetrack.fileops import fprintf_copy
+from cruise_track.fileops import fprintf_copy
 
 
 def rtz_export(Lon,
