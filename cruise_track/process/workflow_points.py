@@ -4,8 +4,8 @@ import numpy as np
 import pandas as pd
 from qgis.core import QgsVectorLayer
 
-from cruisetrack.process import plot_track
-from cruisetrack.process.tsp_nn import tsp_nn
+from cruise_track.process import plot_track
+from cruise_track.process.tsp_nn import tsp_nn
 
 
 def point_workflow(laye_r: QgsVectorLayer, flip_ns, flip_we) -> Tuple[List, List]:
