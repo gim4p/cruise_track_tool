@@ -1,7 +1,7 @@
 import sys
 from datetime import datetime
 
-from cruisetrack.fileops import fprintf_copy
+from cruise_track.fileops import fprintf_copy
 
 
 def rt3_export(Lon, Lat, filename):  #### RT3 file export, copied from Marius Becker (working group member), translated to python
