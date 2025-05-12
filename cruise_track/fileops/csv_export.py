@@ -4,7 +4,7 @@ import sys
 import numpy as np
 import pandas as pd
 
-from cruisetrack.fileops import fprintf_copy
+from cruise_track.fileops import fprintf_copy
 
 
 def csv_export(longitude, latitude, filename: str):

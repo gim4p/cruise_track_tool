@@ -7,7 +7,7 @@ from PyQt5.QtCore import QVariant
 from matplotlib import pyplot as plt
 from qgis.core import QgsField, QgsPointXY, QgsPoint, QgsVectorLayer
 
-from cruisetrack.process import plot_track
+from cruise_track.process import plot_track
 
 
 def line_features_to_df(laye_r) -> pd.DataFrame:

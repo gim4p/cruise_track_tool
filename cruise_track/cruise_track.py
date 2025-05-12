@@ -225,11 +225,11 @@ class CruiseTrackExport:
             import os
             from qgis.core import QgsWkbTypes
 
-            from cruisetrack.fileops.rt3_export import rt3_export
+            from cruise_track.fileops.rt3_export import rt3_export
 
-            from cruisetrack.fileops.rtz_export import rtz_export
+            from cruise_track.fileops.rtz_export import rtz_export
 
-            from cruisetrack.fileops.csv_export import csv_export
+            from cruise_track.fileops.csv_export import csv_export
 
             # Identify selected layer by its index
             ly_tree_nd = layers[selected_layer_index]
@@ -241,7 +241,7 @@ class CruiseTrackExport:
                 geom = fea_t.geometry()
 
             if geom.type() == QgsWkbTypes.LineGeometry:
-                from cruisetrack.process.workflow_lines import lines_workflow
+                from cruise_track.process.workflow_lines import lines_workflow
                 lon, lat = lines_workflow(layer_provider=layer_provider,
                                           laye_r=laye_r,
                                           is_individual_trackline=is_individual_trackline,
@@ -255,7 +255,7 @@ class CruiseTrackExport:
                                           flip_ns=flip_ns)
 
             elif geom.type() == QgsWkbTypes.PointGeometry:
-                from cruisetrack.process.workflow_points import point_workflow
+                from cruise_track.process.workflow_points import point_workflow
                 lon, lat = point_workflow(laye_r=laye_r, flip_ns=flip_ns, flip_we=flip_we)
 
 
