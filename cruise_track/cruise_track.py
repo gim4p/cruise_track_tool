@@ -225,11 +225,11 @@ class CruiseTrackExport:
             import os
             from qgis.core import QgsWkbTypes
 
-            from cruisetrack.fileops.rt3_export import rt3_export
+            from cruise_track.fileops.rt3_export import rt3_export
 
-            from cruisetrack.fileops.rtz_export import rtz_export
+            from cruise_track.fileops.rtz_export import rtz_export
 
-            from cruisetrack.fileops.csv_export import csv_export
+            from cruise_track.fileops.csv_export import csv_export
 
             # Identify selected layer by its index
             ly_tree_nd = layers[selected_layer_index]
