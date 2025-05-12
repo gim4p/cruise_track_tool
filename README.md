@@ -24,11 +24,7 @@ ln -s cruise_track_tool/cruisetrack/ ~/.local/share/QGIS/QGIS3/profiles/default/
 
 #### with zip
 
-Download link for zip file for QGIS:
-[download](https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/gim4p/cruise_track/tree/main/cruisetrack)
-([DownGit](https://minhaskamal.github.io/DownGit/#/home) by [MinhasKamal](https://github.com/MinhasKamal))
-
-Clicking this download link ((https://minhaskamal.github.io/DownGit/#/home?url=https://github.com/gim4p/cruise_track/tree/main/cruisetrack)) recently triggers a warning for viruses or malware. Alternatively, you can download the folders directly. Simply rezip the "cruise_track" folder which is located in the main folder "cruise_track_tool-main". You can then use this re-zipped folder to install the tool via the "Install from ZIP" option in the Plugin Installer.
+Just download the folders directly. Simply rezip the "cruise_track" folder which is located in the main folder "cruise_track_tool-main". You can then use this re-zipped folder to install the tool via the "Install from ZIP" option in the Plugin Installer.
 
 #### with symlink
 
